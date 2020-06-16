@@ -37,14 +37,19 @@ def is_invalid(node):
     return ret # If valid, return '' (falsey value)
 
 def split_child(unfull_parent, child_idx):
+    ''' 
+    Because it support 2-3 tree, it is different to CLRS. 
+    Add to child, and split. that's it.
+    '''
     child = unfull_parent.children[child_idx] # child is full.
     min_n, max_n = child.min_n, child.max_n
+    
     up_idx = max_n // 2 # index of elem to go parent 
-    '''
+    up_key = child.keys[up_idx]
+    
     l_child = Node(
         child.is_leaf, min_n, max_n,
-        child.keys[:up_idx]
-    '''
+        child.keys[:up_idx],
         
 
 print(rep(Node3(False, (10, 12, 20),
