@@ -34,13 +34,22 @@ def test_insert_split():
 #def test_insert_prop_test(xs):
 def test_insert_prop_test():
     # number of keys inserted/flattend btree are same
+    # keys from dfs are sorted
     # all nodes are valid
     
-    # keys are sorted from dfs
     # all leaves have same height
     tree = Node(False, (6,), (leaf(5), leaf(7)))
     print(Node(False, (6,), (leaf(5), leaf(7))))
     print(F.lflatten(tree))
+    print('--------')
+    dfs(tree)
+    print('--------')
+    all_keys(tree)
+    
+    print('========')
+    tree = Node(False, (5,10), (leaf(0,1), leaf(7,8), leaf(15)))
+    all_keys(tree)
+
     assert False
 
 @pytest.mark.skip(reason="no way of currently testing this")

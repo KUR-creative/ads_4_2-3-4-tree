@@ -1,6 +1,8 @@
 from bisect import bisect
 from collections import namedtuple
 
+import funcy as F
+
 
 Node = namedtuple(
     'Node', 'is_leaf keys children', defaults=[()])
@@ -41,6 +43,27 @@ def is_invalid(node, max_n, min_n=1):
     ])
     return ret # If valid, return '' (falsey value)
 
+def dfs(node):
+    print(node.keys)
+    for child in node.children:
+        dfs(child)
+        
+def intersect_seq(children, keys):
+    return F.butlast(F.cat(zip(
+        children, keys + type(keys)([None])
+    )))
+        
+def all_keys(node):
+    if node.is_leaf:
+        for key in node.keys:
+            print(key)
+    else:
+        for x in intersect_seq(node.children, node.keys):
+            if type(x) is int:
+                print(x)
+            else: # Node
+                all_keys(x)
+        
 def tuple_insert(xs, idx, y):
     return xs[:idx] + (y,) + xs[idx:]
 
