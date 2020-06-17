@@ -71,9 +71,9 @@ def all_nodes(root, nodes=()):
 def tuple_insert(tup, idx, val):
     return tup[:idx] + (val,) + tup[idx:]
 def tuple_update(tup, idx, val):
-    ret = list(tup)
-    ret[idx] = val
-    return tuple(ret)
+    return tup[:idx] + (val,) + tup[idx+1:]
+def tuple_omit(tup, idx):
+    return tup[:idx] + tup[idx+1:]
 
 '''
 def index(arr, x):
@@ -107,7 +107,15 @@ def insert(node, key, max_n):
                 children = tuple_update(
                     node.children, idx, child))
         else: # leaf is splitted.
-            pass
+            excerpt = child
+            return node._replace(
+                keys = node.keys + excerpt.keys,
+                children = tuple_omit(
+                    node.children, idx
+                ) + excerpt.children
+            )
+            #print('n',tuple(node))
+            #print('c',tuple(child))
 
 def split_child(unfull_parent, child_idx, max_n, min_n=1):
     ''' 
@@ -132,6 +140,9 @@ def dfs(root):
 keys = (100, 50)
 keys = (100, 50, 150)
 keys = (100, 50, 150, 200)
+keys = (100, 50, 150, 200, 120)
+keys = (100, 50, 150, 200, 120, 135)
+keys = (100, 50, 150, 200, 120, 135, 140)
 from pprint import pprint
 max_n = 2
 tree = Node(True, keys[:1])
@@ -140,7 +151,9 @@ pprint(tuple(tree))
 for key in keys[1:]:
     print('---- inp:', key, '----')
     tree = insert(tree, key, max_n)
+    #pprint(tuple(tree))
     pprint(tuple(tree))
 print('result:')
 #pprint(tuple(tree))
-pprint(dfs(tree))
+#pprint(tuple(tree))
+

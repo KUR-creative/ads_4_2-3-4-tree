@@ -31,20 +31,62 @@ def test_insert_split():
     ins3 = lambda *args: insert(*args, 3)
     #root = insert(leaf(5), 6, 2)
     #root = insert(root, 7, 2)
+    
+def test_insert_explicit_sequence():
+    keys = (100, 50, 150, 200, 120, 135, 140)
+    expecteds = [
+        Node(True, (100,), ()),
+        Node(True, (50, 100), ()),
+        Node(False, (100,),
+             (Node(is_leaf=True, keys=(50,), children=()),
+              Node(is_leaf=True, keys=(150,), children=()))),
+        Node(False, (100,),
+             (Node(is_leaf=True, keys=(50,), children=()),
+              Node(is_leaf=True, keys=(150, 200), children=()))),
+        Node(False, (100, 150),
+             (Node(is_leaf=True, keys=(50,), children=()),
+              Node(is_leaf=True, keys=(120,), children=()),
+              Node(is_leaf=True, keys=(200,), children=()))),
+        Node(False, (100, 150),
+             (Node(is_leaf=True, keys=(50,), children=()),
+              Node(is_leaf=True, keys=(120, 135), children=()),
+              Node(is_leaf=True, keys=(200,), children=()))),
+        Node(False, (135,),
+             (Node(True, (100,), (
+                 Node(is_leaf=True, keys=(50,), children=()),
+                 Node(is_leaf=True, keys=(120,), children=()))),
+              Node(True, (150,), (
+                  Node(is_leaf=True, keys=(140,), children=()),
+                  Node(is_leaf=True, keys=(200,), children=())))))
+    ]
+    tree = Node(True, keys[:1])
+    for key, expected in zip(keys[1:], expecteds[1:]):
+        print('---- inp:', key, '----')
+        tree = insert(tree, key, max_n)
+        assert tree == expected
 
+#---------------------------------------------------------
 @st.composite
-def gen_tup_update(draw):
+def gen_tup(draw):
     tup = tuple(draw(st.lists(st.integers(), min_size=1)))
     idx = random.randint(0, len(tup) - 1)
     new = draw(st.integers())
     return [tup, idx, new]
-@given(gen_tup_update())
+
+@given(gen_tup())
 def test_tuple_update(tup_idx_new):
     tup,idx,new = tup_idx_new
     new_tup = tuple_update(tup, idx, new)
     print(new_tup)
     assert new_tup[idx] == new
+
+@given(gen_tup())
+def test_tuple_omit(tup_idx_new):
+    tup, idx, _ = tup_idx_new
+    new_tup = tuple_omit(tup, idx)
+    assert tuple_insert(new_tup, idx, tup[idx]) == tup
     
+#---------------------------------------------------------
 @pytest.mark.skip(reason="useless")
 @given(st.lists(st.integers(), min_size = 2, unique=True))
 def test_insert_prop_test_max2(keys):
