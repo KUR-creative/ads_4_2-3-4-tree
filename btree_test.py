@@ -1,7 +1,9 @@
+import random
+from pprint import pprint
+
 import pytest
 from hypothesis import given, example
 from hypothesis import strategies as st
-
 import funcy as F
 
 from btree import *
@@ -30,26 +32,80 @@ def test_insert_split():
     #root = insert(leaf(5), 6, 2)
     #root = insert(root, 7, 2)
 
-#@given(st.lists(st.integers(), min_size = 1))
-#def test_insert_prop_test(xs):
-def test_insert_prop_test():
-    # number of keys inserted/flattend btree are same
-    # keys from dfs are sorted
-    # all nodes are valid
+@st.composite
+def gen_tup_update(draw):
+    tup = tuple(draw(st.lists(st.integers(), min_size=1)))
+    idx = random.randint(0, len(tup) - 1)
+    new = draw(st.integers())
+    return [tup, idx, new]
+@given(gen_tup_update())
+def test_tuple_update(tup_idx_new):
+    tup,idx,new = tup_idx_new
+    new_tup = tuple_update(tup, idx, new)
+    print(new_tup)
+    assert new_tup[idx] == new
     
-    # all leaves have same height
-    tree = Node(False, (6,), (leaf(5), leaf(7)))
-    print(Node(False, (6,), (leaf(5), leaf(7))))
-    print(F.lflatten(tree))
-    print('--------')
-    dfs(tree)
-    print('--------')
-    all_keys(tree)
-    
-    print('========')
-    tree = Node(False, (5,10), (leaf(0,1), leaf(7,8), leaf(15)))
-    all_keys(tree)
+@pytest.mark.skip(reason="useless")
+@given(st.lists(st.integers(), min_size = 2, unique=True))
+def test_insert_prop_test_max2(keys):
+    max_n = 2
+    keys = tuple(keys)
+    tree = Node(True, keys[:1])
+    print('-------------------======')
+    for key in keys[1:]:
+        tree = insert(tree, key, max_n)
+        print(tree)
+        print(key)
 
+    ks = all_keys(tree)
+    ns = all_nodes(tree)
+
+    pprint(tree)
+    if len(keys) > max_n:
+        assert (not tree.is_leaf), 'root is not leaf'
+    assert len(keys) == len(ks), \
+        'number of keys inserted/flattend btree are same'
+    assert tuple(sorted(keys)) == ks, 'keys from dfs are sorted'
+    assert all((not is_invalid(n, max_n)) for n in ns), \
+        'all nodes are valid'
+    assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
+        'all leaves have no children'
+    # all leaves have same height
+    pass
+    
+@pytest.mark.skip(reason="useless")
+def test_all_keys_all_nodes():
+    
+    #tree = Node(False, (6,), (leaf(5), leaf(7)))
+    print('===rr=====')
+    #tree = Node(False, (5,10), (leaf(0,1), leaf(7,8), leaf(15)))
+    tree = Node(is_leaf=False,
+        keys=(1,),
+        children=(Node(is_leaf=True,
+                        keys=(0,),
+                        children=()),
+                Node(is_leaf=True,
+                        keys=(1,),
+                        children=())))
+    ks = all_keys(tree)
+    ns = all_nodes(tree)
+    print(ks)
+    #print([n.keys for n in ns])
+    #pprint(ns)
+    pprint([n.keys for n in ns])
+    print(len(ns))
+    print('====--------======')
+    assert False
+    
+    tree = Node(
+        False, (5,),
+        (Node(False, (1,), (leaf(0), leaf(2))),
+         Node(False, (8,10), (leaf(7), leaf(9), leaf(15)))))
+    ks = all_keys(tree)
+    ns = all_nodes(tree)
+    print(ks)
+    print(len(ns))
+    pprint([n.keys for n in ns])
     assert False
 
 @pytest.mark.skip(reason="no way of currently testing this")

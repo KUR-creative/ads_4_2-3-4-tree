@@ -53,36 +53,61 @@ def intersect_seq(children, keys):
         children, keys + type(keys)([None])
     )))
         
-def all_keys(node):
-    if node.is_leaf:
-        for key in node.keys:
-            print(key)
+def all_keys(root):
+    if root.is_leaf:
+        return root.keys
     else:
-        for x in intersect_seq(node.children, node.keys):
-            if type(x) is int:
-                print(x)
-            else: # Node
-                all_keys(x)
-        
-def tuple_insert(xs, idx, y):
-    return xs[:idx] + (y,) + xs[idx:]
+        keys = ()
+        for x in intersect_seq(root.children, root.keys):
+            keys += ((x,) if type(x) is int else all_keys(x))
+        return keys
 
-def insert(tree, key, max_n):
-    node = tree
-    
+def all_nodes(root, nodes=()):
+    nodes = (root,)
+    for node in root.children:
+        nodes += all_nodes(node)
+    return nodes
+        
+def tuple_insert(tup, idx, val):
+    return tup[:idx] + (val,) + tup[idx:]
+def tuple_update(tup, idx, val):
+    ret = list(tup)
+    ret[idx] = val
+    return tuple(ret)
+
+'''
+def index(arr, x):
+    'Locate the leftmost value exactly equal to x'
+    i = bisect_left(arr, x)
+    if i != len(arr) and arr[i] == x:
+        return i
+    # if x not in arr, return None
+'''
+
+up_idx = 1 # (2-3, 2-3-4 just same as 1)
+def insert(node, key, max_n):
     idx = bisect(node.keys, key)
-    new_keys = tuple_insert(node.keys, idx, key)
-    
-    if len(node.keys) < max_n:
-        return node._replace(keys = new_keys)
+    if node.is_leaf:
+        new_keys = tuple_insert(node.keys, idx, key)
+        if len(node.keys) < max_n: # just insert to leaf
+            return node._replace(keys = new_keys)
+        else: # insert to leaf and return splitted.
+            up_key = new_keys[up_idx]
+            return node._replace(
+                is_leaf = False,
+                keys = (up_key,),
+                children = (leaf(*new_keys[:up_idx]),
+                            leaf(*new_keys[up_idx + 1:])))
     else:
-        up_idx = 1 # (2-3, 2-3-4 just same as 1)
-        up_key = node.keys[up_idx]
-        return node._replace(
-            is_leaf=False,
-            keys=(up_key,),
-            children=(leaf(*new_keys[:up_idx]),
-                      leaf(*new_keys[up_idx + 1:])))
+        child = insert(node.children[idx], key, max_n)
+        #print(':', node)
+        #print(':', child)
+        if child.is_leaf: # key is just inserted to leaf
+            return node._replace(
+                children = tuple_update(
+                    node.children, idx, child))
+        else: # leaf is splitted.
+            pass
 
 def split_child(unfull_parent, child_idx, max_n, min_n=1):
     ''' 
@@ -97,10 +122,25 @@ def split_child(unfull_parent, child_idx, max_n, min_n=1):
     #l_child = Node(
         #child.is_leaf, min_n, max_n, child.keys[:up_idx],
         
+def dfs(root):
+    #tups = (tuple(root), )
+    tups = (tuple(root), )
+    for node in root.children:
+        tups += dfs(node)
+    return tups
 
-'''
-print(rep(Node(False, (10, 12, 20),
-                   (Node(True, (11,)), Node(True, (13,))))))
-print(type(Node(False, (10, 12, 20),
-                   (Node(True, (11,)), Node(True, (13,))))))
-'''
+keys = (100, 50)
+keys = (100, 50, 150)
+keys = (100, 50, 150, 200)
+from pprint import pprint
+max_n = 2
+tree = Node(True, keys[:1])
+print('-------------------======')
+pprint(tuple(tree))
+for key in keys[1:]:
+    print('---- inp:', key, '----')
+    tree = insert(tree, key, max_n)
+    pprint(tuple(tree))
+print('result:')
+#pprint(tuple(tree))
+pprint(dfs(tree))
