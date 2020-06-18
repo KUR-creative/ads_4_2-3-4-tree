@@ -1,5 +1,5 @@
 from pprint import pprint
-from bisect import bisect
+from bisect import bisect, bisect_left
 from collections import namedtuple
 
 import funcy as F
@@ -144,8 +144,8 @@ def insert(node, key, max_n):
               else split_node(merged, max_n)) # split
         
 def update(node, idxes, new_node):
-    print('----')
-    print(tuple(node))
+    #print('----')
+    #print(tuple(node))
     if not idxes: # empty
         return new_node
     else:
@@ -155,16 +155,22 @@ def update(node, idxes, new_node):
                 node.children,
                 idx,
                 update(node.children[idx], last, new_node)))
-    
+'''
 tree = btree(2, 2,5,7,8)
 tree = btree(2, 100, 50, 150, 200, 120, 135, 140, 210, 220)
 print(tuple(tree))
 print(tuple(update(tree, [1], leaf(-1))))
 print('====')
 print(tuple(update(tree, [1,2], leaf(-1))))
-
 exit()
-    
+'''
+def index(a, x):
+    'Locate the leftmost value exactly equal to x'
+    i = bisect_left(a, x)
+    if i != len(a) and a[i] == x:
+        return i
+    return None
+
 def delete(tree, key, max_n):
     # get path root to leaf
     node = tree
@@ -178,11 +184,12 @@ def delete(tree, key, max_n):
         node = next_node
 
     leaf = nodes[-1]
-    idx = bisect(leaf.keys, key)
+    idx = index(leaf.keys, key)
     new_leaf = leaf._replace(
-        keys=tuple_omit(leaf.keys, idx)
+        keys =(leaf.keys if idx is None else
+               tuple_omit(leaf.keys, idx))
     )
-    return update(root, idxes, new_leaf)
+    return update(tree, idxes, new_leaf)
     #pprint(nodes)
     print('idxes:', idxes)
     return tree

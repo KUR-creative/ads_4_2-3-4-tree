@@ -83,7 +83,11 @@ def test_delete_explicit_sequence():
     tree = btree(2, 2,5,7,8)
     assert tree == delete(tree, -100, 2) 
     # leaf(replace x), steal x, merge x
-    pass
+    assert(delete(tree, 7, 2) 
+        == Node(False, (5,), (
+            Node(is_leaf=True, keys=(2,), children=()),
+            Node(is_leaf=True, keys=(8,), children=()))))
+    # leaf(replace x), steal x, merge x
 #---------------------------------------------------------
 @st.composite
 def gen_tup(draw):
