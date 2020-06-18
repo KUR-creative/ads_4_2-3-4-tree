@@ -1,3 +1,4 @@
+from pprint import pprint
 from bisect import bisect
 from collections import namedtuple
 
@@ -142,10 +143,57 @@ def insert(node, key, max_n):
             return(merged if len(merged.keys) <= max_n # just insert to leaf
               else split_node(merged, max_n)) # split
         
-def delete():
-    pass
+def update(node, idxes, new_node):
+    print('----')
+    print(tuple(node))
+    if not idxes: # empty
+        return new_node
+    else:
+        idx, *last = idxes
+        return node._replace(
+            children = tuple_update(
+                node.children,
+                idx,
+                update(node.children[idx], last, new_node)))
+    
+tree = btree(2, 2,5,7,8)
+tree = btree(2, 100, 50, 150, 200, 120, 135, 140, 210, 220)
+print(tuple(tree))
+print(tuple(update(tree, [1], leaf(-1))))
+print('====')
+print(tuple(update(tree, [1,2], leaf(-1))))
+
+exit()
+    
+def delete(tree, key, max_n):
+    # get path root to leaf
+    node = tree
+    nodes = [node]
+    idxes = []
+    while not node.is_leaf:
+        node_idx = bisect(node.keys, key)
+        next_node = node.children[node_idx]
+        nodes.append(next_node)
+        idxes.append(node_idx)
+        node = next_node
+
+    leaf = nodes[-1]
+    idx = bisect(leaf.keys, key)
+    new_leaf = leaf._replace(
+        keys=tuple_omit(leaf.keys, idx)
+    )
+    return update(root, idxes, new_leaf)
+    #pprint(nodes)
+    print('idxes:', idxes)
+    return tree
 #--------------------------------------------------------------
 
+tree = btree(2, 2,5,7,8)
+print('-------- before --------')
+pprint(tuple(tree))
+print('-------- after --------')
+pprint(tuple(delete(tree, 7, 2)))
+'''
 keys = (100, 50)
 keys = (100, 50, 150)
 keys = (100, 50, 150, 200)
@@ -158,7 +206,6 @@ keys = (100, 50, 150, 200, 120, 135, 140, 170, 250, 145)
 keys = (100, 50, 150, 200, 120, 135, 140, 170, 250, 145, 142)
 keys = (100,50,150,200,120,135,140,170,250,145,142,-10,-25, 130)
 keys = (100,50,150,200,120,135,140,170,250,145,142,-10,-25, 130, 140, 134)
-from pprint import pprint
 max_n = 2
 #max_n = 3
 tree = Node(True, keys[:1])
@@ -175,3 +222,4 @@ for end,key in enumerate(keys[1:], start=2):
     ns = all_nodes(tree)
     # pprint(tree)
     assert_valid(tree, max_n, keys[:end])
+'''

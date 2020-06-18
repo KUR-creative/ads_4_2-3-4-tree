@@ -77,6 +77,13 @@ def test_insert_explicit_sequence():
         tree = insert(tree, key, max_n)
         assert tree == expected
 
+def test_delete_explicit_sequence():
+    max_n = 2
+    # no found
+    tree = btree(2, 2,5,7,8)
+    assert tree == delete(tree, -100, 2) 
+    # leaf(replace x), steal x, merge x
+    pass
 #---------------------------------------------------------
 @st.composite
 def gen_tup(draw):
