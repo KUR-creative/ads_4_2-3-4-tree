@@ -33,8 +33,9 @@ def test_insert_split():
     #root = insert(root, 7, 2)
     
 def test_insert_explicit_sequence():
-    #keys = (100, 50, 150, 200, 120, 135)
-    keys = (100, 50, 150, 200, 120, 135, 140)
+    #keys = (100, 50, 150, 200, 120, 135, 140, 170)
+    #keys = (100, 50, 150, 200, 120, 135, 140, 170, 250)
+    keys = (100, 50, 150, 200, 120, 135, 140, 170, 250, 145)
     expecteds = [
         Node(True, (100,), ()),
         Node(True, (50, 100), ()),
@@ -58,7 +59,16 @@ def test_insert_explicit_sequence():
                  Node(is_leaf=True, keys=(120,), children=()))),
               Node(False, (150,), (
                   Node(is_leaf=True, keys=(140,), children=()),
-                  Node(is_leaf=True, keys=(200,), children=())))))
+                  Node(is_leaf=True, keys=(200,), children=()))))),
+        Node(False, (135,),
+             (Node(is_leaf=False, keys=(100,), children=(Node(is_leaf=True, keys=(50,), children=()), Node(is_leaf=True, keys=(120,), children=()))),
+              Node(is_leaf=False, keys=(150,), children=(Node(is_leaf=True, keys=(140,), children=()), Node(is_leaf=True, keys=(170, 200), children=()))))),
+        Node(False, (135,),
+             (Node(is_leaf=False, keys=(100,), children=(Node(is_leaf=True, keys=(50,), children=()), Node(is_leaf=True, keys=(120,), children=()))),
+              Node(is_leaf=False, keys=(150, 200), children=(Node(is_leaf=True, keys=(140,), children=()), Node(is_leaf=True, keys=(170,), children=()), Node(is_leaf=True, keys=(250,), children=()))))),
+        Node(False, (135,),
+             (Node(is_leaf=False, keys=(100,), children=(Node(is_leaf=True, keys=(50,), children=()), Node(is_leaf=True, keys=(120,), children=()))),
+              Node(is_leaf=False, keys=(150, 200), children=(Node(is_leaf=True, keys=(140, 145), children=()), Node(is_leaf=True, keys=(170,), children=()), Node(is_leaf=True, keys=(250,), children=())))))
     ]
     tree = Node(True, keys[:1])
     for key, expected in zip(keys[1:], expecteds[1:]):
@@ -88,39 +98,36 @@ def test_tuple_omit(tup_idx_new):
     assert tuple_insert(new_tup, idx, tup[idx]) == tup
     
 #---------------------------------------------------------
-@pytest.mark.skip(reason="useless")
+#@pytest.mark.skip(reason="useless")
 @given(st.lists(st.integers(), min_size = 2, unique=True))
 def test_insert_prop_test_max2(keys):
-    max_n = 2
-    keys = tuple(keys)
-    tree = Node(True, keys[:1])
-    print('-------------------======')
-    for key in keys[1:]:
-        tree = insert(tree, key, max_n)
-        print(tree)
-        print(key)
+    for max_n in [2,3]:
+        keys = tuple(keys)
+        tree = Node(True, keys[:1])
+        print('-------------------======')
+        for key in keys[1:]:
+            tree = insert(tree, key, max_n)
+            print(tree)
+            print(key)
 
-    ks = all_keys(tree)
-    ns = all_nodes(tree)
-
-    pprint(tree)
-    if len(keys) > max_n:
-        assert (not tree.is_leaf), 'root is not leaf'
-    assert len(keys) == len(ks), \
-        'number of keys inserted/flattend btree are same'
-    assert tuple(sorted(keys)) == ks, 'keys from dfs are sorted'
-    assert all((not is_invalid(n, max_n)) for n in ns), \
-        'all nodes are valid'
-    assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
-        'all leaves have no children'
-    # all same height leaves (childrens are all leaves or not) 
-    ''' something like below..
-    for node in nodes:
-        print(node.children)
-        print(all([a.is_leaf == b.is_leaf
-                for a,b in F.pairwise(node.children)]))
-    '''
-    pass
+        ks = all_keys(tree)
+        ns = all_nodes(tree)
+        # pprint(tree)
+        if len(keys) > max_n:
+            assert (not tree.is_leaf), 'root is not leaf'
+        assert len(keys) == len(ks), \
+            'number of keys inserted/flattend btree are same'
+        assert tuple(sorted(keys)) == ks, 'keys from dfs are sorted'
+        assert all((not is_invalid(n, max_n)) for n in ns), \
+            'all nodes are valid'
+        assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
+            'all leaves have no children'
+        assert all(map(
+            lambda node: all([
+                n1.is_leaf == n2.is_leaf
+                for n1,n2 in F.pairwise(node.children)]),
+            ns
+        )),'leaves are all same h (children are all leaves or not) '
     
 @pytest.mark.skip(reason="useless")
 def test_all_keys_all_nodes():

@@ -90,6 +90,7 @@ def split_node(node, max_n):
     ''' a-b-c => b     a-b-c-d => b
                 a c              a c-d '''
     assert len(node.keys) > max_n, f'{len(node.keys)} <= {max_n}, \n{node}'
+    #print('split!')
     return node._replace(
         is_leaf = False,
         keys = (node.keys[up_idx],),
@@ -102,8 +103,7 @@ def split_node(node, max_n):
                  children = node.children[up_idx+1:])))
 
 def insert(node, key, max_n):
-    #print(type(node), node)
-    print('node:', node)
+    #print('node:', node)
     idx = bisect(node.keys, key)
     if node.is_leaf:
         new_keys = tuple_insert(node.keys, idx, key)
@@ -111,17 +111,26 @@ def insert(node, key, max_n):
         return(new_node if len(new_keys) <= max_n # just insert to leaf
           else split_node(new_node, max_n)) # split
     else:
+        #print('-------------------')
+        old_child = node.children[idx]
+        #print('before c', tuple(old_child))
         child = insert(node.children[idx], key, max_n)
         #print(':', node)
         #print(':', child)
         #print('n',tuple(node))
-        #has_split =
-        print('c',tuple(child))
-        if child.is_leaf: # key is just inserted to leaf
+        
+        has_split_child = (
+            len(old_child.keys) > len(child.keys))
+        #no_split_child = (node.children[idx].children == child.children)
+
+        #print(' after c', tuple(child))
+        #print('has_split_child:', has_split_child)
+        #print('-------------------')
+        if not has_split_child: # key is just inserted to leaf
             return node._replace(
                 children = tuple_update(
                     node.children, idx, child))
-        else: # leaf is splitted.
+        else: # child has been split.
             excerpt = child
             up_key = excerpt.keys[0]
             merged = node._replace(
@@ -129,9 +138,9 @@ def insert(node, key, max_n):
                     node.keys, idx, up_key),
                 children = tuple_update(
                     node.children, idx, *excerpt.children))
-            #return merged
-            print('exc', excerpt)
-            print('is_split', len(merged.keys) <= max_n)
+            #print('merged!')
+            #print('exc', excerpt)
+            #print('is_split', len(merged.keys) <= max_n)
             return(merged if len(merged.keys) <= max_n # just insert to leaf
               else split_node(merged, max_n)) # split
             '''
@@ -168,25 +177,50 @@ keys = (100, 50, 150, 200, 120)
 keys = (100, 50, 150, 200, 120, 135)
 keys = (100, 50, 150, 200, 120, 135, 140)
 keys = (100, 50, 150, 200, 120, 135, 140, 170)
+keys = (100, 50, 150, 200, 120, 135, 140, 170, 250)
+keys = (100, 50, 150, 200, 120, 135, 140, 170, 250, 145)
+keys = (100, 50, 150, 200, 120, 135, 140, 170, 250, 145, 142)
+keys = (100,50,150,200,120,135,140,170,250,145,142,-10,-25, 130)
+keys = (100,50,150,200,120,135,140,170,250,145,142,-10,-25, 130, 140, 134)
 from pprint import pprint
-max_n = 2
+#max_n = 2
+max_n = 3
 tree = Node(True, keys[:1])
 print('-------------------======')
 pprint(tuple(tree))
-for key in keys[1:]:
+for end,key in enumerate(keys[1:], start=2):
     print('---- inp:', key, '----')
     tree = insert(tree, key, max_n)
     #pprint(tuple(tree))
     pprint(tuple(tree))
+
+    ks = all_keys(tree)
+    ns = all_nodes(tree)
+    # pprint(tree)
+    if len(keys[:end]) > max_n:
+        assert (not tree.is_leaf), 'root is not leaf'
+    assert len(keys[:end]) == len(ks), \
+        f'{len(keys[:end])} == {len(ks)}: number of keys inserted/flattend btree are not same'
+    assert tuple(sorted(keys[:end])) == ks, 'keys from dfs are sorted'
+    assert all((not is_invalid(n, max_n)) for n in ns), \
+        'all nodes are valid'
+    assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
+        'all leaves have no children'
+    assert all(map(
+        lambda node: all([
+            n1.is_leaf == n2.is_leaf
+            for n1,n2 in F.pairwise(node.children)]),
+        ns
+    )),'leaves are all same h (children are all leaves or not) '
+'''
 print('result:')
 pprint(dfs(tree))
+
 nodes = all_nodes(tree)
-'''
 print('---- check ----')
 for node in nodes:
     print(node.children)
-    print(all([a.is_leaf == b.is_leaf
-               for a,b in F.pairwise(node.children)]))
+    print()
 '''
 #pprint(tuple(tree))
 
