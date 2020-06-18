@@ -7,15 +7,6 @@ import funcy as F
 Node = namedtuple(
     'Node', 'is_leaf keys children', defaults=[()])
 
-def rep(node):
-    return '[{}{}|{}|{}]'.format(
-        'L' if node.is_leaf else 'M',
-        ' '.join(map(str, node.keys)),
-        ' '.join(str(c.keys[0]) + '.' for c in node.children)
-    ) if type(node) is Node else 'NotNode'
-
-# max_n = 2: 2-3
-# max_n = 3: 2-3-4
 def leaf(*keys):
     return Node(True, tuple(keys), ())
 
@@ -68,6 +59,7 @@ def all_nodes(root, nodes=()):
         nodes += all_nodes(node)
     return nodes
         
+#--------------------------------------------------------------
 def tuple_insert(tup, idx, val):
     return tup[:idx] + (val,) + tup[idx:]
 def tuple_update(tup, idx, *val):
@@ -75,22 +67,11 @@ def tuple_update(tup, idx, *val):
 def tuple_omit(tup, idx):
     return tup[:idx] + tup[idx+1:]
 
-'''
-def index(arr, x):
-    'Locate the leftmost value exactly equal to x'
-    i = bisect_left(arr, x)
-    if i != len(arr) and arr[i] == x:
-        return i
-    # if x not in arr, return None
-'''
-
 up_idx = 1 # (2-3, 2-3-4 just same as 1)
-#def split_node(node):
 def split_node(node, max_n):
     ''' a-b-c => b     a-b-c-d => b
                 a c              a c-d '''
-    assert len(node.keys) > max_n, f'{len(node.keys)} <= {max_n}, \n{node}'
-    #print('split!')
+    #assert len(node.keys) > max_n, f'{len(node.keys)} <= {max_n}, \n{node}'
     return node._replace(
         is_leaf = False,
         keys = (node.keys[up_idx],),
@@ -102,8 +83,9 @@ def split_node(node, max_n):
                  keys = node.keys[up_idx + 1:],
                  children = node.children[up_idx+1:])))
 
+# max_n = 2: 2-3
+# max_n = 3: 2-3-4
 def insert(node, key, max_n):
-    #print('node:', node)
     idx = bisect(node.keys, key)
     if node.is_leaf:
         new_keys = tuple_insert(node.keys, idx, key)
@@ -111,22 +93,12 @@ def insert(node, key, max_n):
         return(new_node if len(new_keys) <= max_n # just insert to leaf
           else split_node(new_node, max_n)) # split
     else:
-        #print('-------------------')
         old_child = node.children[idx]
-        #print('before c', tuple(old_child))
         child = insert(node.children[idx], key, max_n)
-        #print(':', node)
-        #print(':', child)
-        #print('n',tuple(node))
-        
         has_split_child = (
             len(old_child.keys) > len(child.keys))
-        #no_split_child = (node.children[idx].children == child.children)
 
-        #print(' after c', tuple(child))
-        #print('has_split_child:', has_split_child)
-        #print('-------------------')
-        if not has_split_child: # key is just inserted to leaf
+        if not has_split_child: # key is just inserted
             return node._replace(
                 children = tuple_update(
                     node.children, idx, child))
@@ -138,38 +110,10 @@ def insert(node, key, max_n):
                     node.keys, idx, up_key),
                 children = tuple_update(
                     node.children, idx, *excerpt.children))
-            #print('merged!')
-            #print('exc', excerpt)
-            #print('is_split', len(merged.keys) <= max_n)
             return(merged if len(merged.keys) <= max_n # just insert to leaf
               else split_node(merged, max_n)) # split
-            '''
-            print('idx', idx)
-            print('n',tuple(node))
-            print('c',tuple(child))
-            print('m',tuple(merged))
-            '''
-
-def split_child(unfull_parent, child_idx, max_n, min_n=1):
-    ''' 
-    Because it support 2-3 tree, it is different to CLRS. 
-    Add to child, and split. that's it.
-    '''
-    child = unfull_parent.children[child_idx] # child is full.
-    
-    up_idx = max_n // 2 # index of elem to go parent 
-    up_key = child.keys[up_idx]
-    
-    #l_child = Node(
-        #child.is_leaf, min_n, max_n, child.keys[:up_idx],
         
-def dfs(root):
-    #tups = (tuple(root), )
-    tups = (tuple(root), )
-    for node in root.children:
-        tups += dfs(node)
-    return tups
-
+#--------------------------------------------------------------
 keys = (100, 50)
 keys = (100, 50, 150)
 keys = (100, 50, 150, 200)
