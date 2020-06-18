@@ -85,24 +85,38 @@ def index(arr, x):
 '''
 
 up_idx = 1 # (2-3, 2-3-4 just same as 1)
+#def split_node(node):
+def split_node(node, max_n):
+    ''' a-b-c => b     a-b-c-d => b
+                a c              a c-d '''
+    assert len(node.keys) > max_n, f'{len(node.keys)} <= {max_n}, \n{node}'
+    return node._replace(
+        is_leaf = False,
+        keys = (node.keys[up_idx],),
+        children = (
+            Node(is_leaf = node.is_leaf,
+                 keys = node.keys[:up_idx],
+                 children = node.children[:up_idx+1]),
+            Node(is_leaf = node.is_leaf,
+                 keys = node.keys[up_idx + 1:],
+                 children = node.children[up_idx+1:])))
+
 def insert(node, key, max_n):
-    print(type(node), node)
+    #print(type(node), node)
+    print('node:', node)
     idx = bisect(node.keys, key)
     if node.is_leaf:
         new_keys = tuple_insert(node.keys, idx, key)
-        if len(node.keys) < max_n: # just insert to leaf
-            return node._replace(keys = new_keys)
-        else: # insert to leaf and return splitted.
-            up_key = new_keys[up_idx]
-            return node._replace(
-                is_leaf = False,
-                keys = (up_key,),
-                children = (leaf(*new_keys[:up_idx]),
-                            leaf(*new_keys[up_idx + 1:])))
+        new_node = node._replace(keys = new_keys)
+        return(new_node if len(new_keys) <= max_n # just insert to leaf
+          else split_node(new_node, max_n)) # split
     else:
         child = insert(node.children[idx], key, max_n)
         #print(':', node)
         #print(':', child)
+        #print('n',tuple(node))
+        #has_split =
+        print('c',tuple(child))
         if child.is_leaf: # key is just inserted to leaf
             return node._replace(
                 children = tuple_update(
@@ -115,13 +129,17 @@ def insert(node, key, max_n):
                     node.keys, idx, up_key),
                 children = tuple_update(
                     node.children, idx, *excerpt.children))
+            #return merged
+            print('exc', excerpt)
+            print('is_split', len(merged.keys) <= max_n)
+            return(merged if len(merged.keys) <= max_n # just insert to leaf
+              else split_node(merged, max_n)) # split
             '''
             print('idx', idx)
             print('n',tuple(node))
             print('c',tuple(child))
             print('m',tuple(merged))
             '''
-            return merged
 
 def split_child(unfull_parent, child_idx, max_n, min_n=1):
     ''' 
@@ -149,6 +167,7 @@ keys = (100, 50, 150, 200)
 keys = (100, 50, 150, 200, 120)
 keys = (100, 50, 150, 200, 120, 135)
 keys = (100, 50, 150, 200, 120, 135, 140)
+keys = (100, 50, 150, 200, 120, 135, 140, 170)
 from pprint import pprint
 max_n = 2
 tree = Node(True, keys[:1])
@@ -160,6 +179,14 @@ for key in keys[1:]:
     #pprint(tuple(tree))
     pprint(tuple(tree))
 print('result:')
-#pprint(tuple(tree))
+pprint(dfs(tree))
+nodes = all_nodes(tree)
+'''
+print('---- check ----')
+for node in nodes:
+    print(node.children)
+    print(all([a.is_leaf == b.is_leaf
+               for a,b in F.pairwise(node.children)]))
+'''
 #pprint(tuple(tree))
 

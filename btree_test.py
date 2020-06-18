@@ -33,6 +33,7 @@ def test_insert_split():
     #root = insert(root, 7, 2)
     
 def test_insert_explicit_sequence():
+    #keys = (100, 50, 150, 200, 120, 135)
     keys = (100, 50, 150, 200, 120, 135, 140)
     expecteds = [
         Node(True, (100,), ()),
@@ -52,10 +53,10 @@ def test_insert_explicit_sequence():
               Node(is_leaf=True, keys=(120, 135), children=()),
               Node(is_leaf=True, keys=(200,), children=()))),
         Node(False, (135,),
-             (Node(True, (100,), (
+             (Node(False, (100,), (
                  Node(is_leaf=True, keys=(50,), children=()),
                  Node(is_leaf=True, keys=(120,), children=()))),
-              Node(True, (150,), (
+              Node(False, (150,), (
                   Node(is_leaf=True, keys=(140,), children=()),
                   Node(is_leaf=True, keys=(200,), children=())))))
     ]
@@ -112,7 +113,13 @@ def test_insert_prop_test_max2(keys):
         'all nodes are valid'
     assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
         'all leaves have no children'
-    # all leaves have same height
+    # all same height leaves (childrens are all leaves or not) 
+    ''' something like below..
+    for node in nodes:
+        print(node.children)
+        print(all([a.is_leaf == b.is_leaf
+                for a,b in F.pairwise(node.children)]))
+    '''
     pass
     
 @pytest.mark.skip(reason="useless")
