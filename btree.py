@@ -89,6 +89,9 @@ def all_nodes(root, nodes=()):
     return nodes
         
 #--------------------------------------------------------------
+def is_empty(coll):
+    return (not coll)
+
 def tuple_insert(tup, idx, val):
     return tup[:idx] + (val,) + tup[idx:]
 def tuple_update(tup, idx, *val):
@@ -172,7 +175,7 @@ def index(a, x):
     return None
 
 def delete(tree, key, max_n):
-    # get path root to leaf
+    # Get path root to leaf
     node = tree
     nodes = [node]
     idxes = []
@@ -182,13 +185,36 @@ def delete(tree, key, max_n):
         nodes.append(next_node)
         idxes.append(node_idx)
         node = next_node
-
+    # Update leaf
     leaf = nodes[-1]
     idx = index(leaf.keys, key)
     new_leaf = leaf._replace(
         keys =(leaf.keys if idx is None else
                tuple_omit(leaf.keys, idx))
     )
+    # ---- Make valid b-tree ----
+    # Steal from sibling
+    #left <= right case
+    # 1. parent -> empty child
+    if is_empty(new_leaf.keys):
+        parent = nodes[-2]
+        sibling = parent.children[idx + 1]
+        
+        parent_key = parent.keys[0] # TODO: r -> l case
+        sibling_key = sibling.keys[0] # TODO: so not 0 case
+        
+        new_target = new_leaf._replace(keys = (parent_key,))
+        new_parent = parent._replace(
+            keys = tuple_update(parent.keys, 0, sibling_key))
+        new_sibling = sibling._replace(
+            keys = tuple_omit(sibling.keys, 0))
+        # Update parent, sibling, target. TODO: add `updates`
+        new_tree = update(tree, idxes[:-1], new_parent)#parent
+        new_tree = update(new_tree, idxes[:-1] + [idx+1], new_sibling) #sibling
+        new_tree = update(new_tree, idxes, new_target) #target
+        return new_tree
+
+    # 2. enough child -> parent
     return update(tree, idxes, new_leaf)
     #pprint(nodes)
     print('idxes:', idxes)
@@ -196,10 +222,11 @@ def delete(tree, key, max_n):
 #--------------------------------------------------------------
 
 tree = btree(2, 2,5,7,8)
+tree = btree(2, 5,7,8,6)
 print('-------- before --------')
 pprint(tuple(tree))
 print('-------- after --------')
-pprint(tuple(delete(tree, 7, 2)))
+pprint(tuple(delete(tree, 8, 2)))
 '''
 keys = (100, 50)
 keys = (100, 50, 150)

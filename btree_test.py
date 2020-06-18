@@ -87,7 +87,16 @@ def test_delete_explicit_sequence():
         == Node(False, (5,), (
             Node(is_leaf=True, keys=(2,), children=()),
             Node(is_leaf=True, keys=(8,), children=()))))
-    # leaf(replace x), steal x, merge x
+    # leaf(replace x), steal (L <- R), merge x
+    assert(delete(tree, 2, 2) 
+        == Node(False, (7,), (
+            Node(is_leaf=True, keys=(5,), children=()),
+            Node(is_leaf=True, keys=(8,), children=()))))
+    # leaf(replace x), steal (L -> R), merge x
+    assert(delete(btree(2, 5,7,8,6), 8, 2)
+        == Node(False, (5,), (
+            Node(is_leaf=True, keys=(6,), children=()),
+            Node(is_leaf=True, keys=(7,), children=()))))
 #---------------------------------------------------------
 @st.composite
 def gen_tup(draw):
