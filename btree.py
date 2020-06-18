@@ -10,6 +10,13 @@ Node = namedtuple(
 def leaf(*keys):
     return Node(True, tuple(keys), ())
 
+def btree(max_n, *keys):
+    root_key,*last = keys
+    root = leaf(root_key)
+    for key in last:
+        root = insert(root, key, max_n)
+    return root
+
 def is_invalid(node, max_n, min_n=1):
     if type(node) is not Node:
         return 'NotNode'
@@ -33,6 +40,27 @@ def is_invalid(node, max_n, min_n=1):
         ) else ''
     ])
     return ret # If valid, return '' (falsey value)
+
+def assert_valid(tree, max_n, input_keys):
+    ks = all_keys(tree)
+    ns = all_nodes(tree)
+    #print('lm', len(input_keys), max_n)
+    if len(input_keys) > max_n:
+        assert (not tree.is_leaf), 'root is not leaf'
+    assert len(input_keys) == len(ks), \
+        f'{len(input_keys)} == {len(ks)}: number of keys inserted/flattend btree are not same'
+    assert tuple(sorted(input_keys)) == ks, \
+        f'{sorted(input_keys)} != {ks} keys from dfs are not sorted'
+    assert all((not is_invalid(n, max_n)) for n in ns), \
+        'all nodes are valid'
+    assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
+        'all leaves have no children'
+    assert all(map(
+        lambda node: all([
+            n1.is_leaf == n2.is_leaf
+            for n1,n2 in F.pairwise(node.children)]),
+        ns
+    )),'leaves are all same h (children are all leaves or not) '
 
 def dfs(node):
     print(node.keys)
@@ -72,6 +100,7 @@ def split_node(node, max_n):
     ''' a-b-c => b     a-b-c-d => b
                 a c              a c-d '''
     #assert len(node.keys) > max_n, f'{len(node.keys)} <= {max_n}, \n{node}'
+    global up_idx
     return node._replace(
         is_leaf = False,
         keys = (node.keys[up_idx],),
@@ -113,7 +142,10 @@ def insert(node, key, max_n):
             return(merged if len(merged.keys) <= max_n # just insert to leaf
               else split_node(merged, max_n)) # split
         
+def delete():
+    pass
 #--------------------------------------------------------------
+
 keys = (100, 50)
 keys = (100, 50, 150)
 keys = (100, 50, 150, 200)
@@ -127,9 +159,10 @@ keys = (100, 50, 150, 200, 120, 135, 140, 170, 250, 145, 142)
 keys = (100,50,150,200,120,135,140,170,250,145,142,-10,-25, 130)
 keys = (100,50,150,200,120,135,140,170,250,145,142,-10,-25, 130, 140, 134)
 from pprint import pprint
-#max_n = 2
-max_n = 3
+max_n = 2
+#max_n = 3
 tree = Node(True, keys[:1])
+
 print('-------------------======')
 pprint(tuple(tree))
 for end,key in enumerate(keys[1:], start=2):
@@ -141,30 +174,4 @@ for end,key in enumerate(keys[1:], start=2):
     ks = all_keys(tree)
     ns = all_nodes(tree)
     # pprint(tree)
-    if len(keys[:end]) > max_n:
-        assert (not tree.is_leaf), 'root is not leaf'
-    assert len(keys[:end]) == len(ks), \
-        f'{len(keys[:end])} == {len(ks)}: number of keys inserted/flattend btree are not same'
-    assert tuple(sorted(keys[:end])) == ks, 'keys from dfs are sorted'
-    assert all((not is_invalid(n, max_n)) for n in ns), \
-        'all nodes are valid'
-    assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
-        'all leaves have no children'
-    assert all(map(
-        lambda node: all([
-            n1.is_leaf == n2.is_leaf
-            for n1,n2 in F.pairwise(node.children)]),
-        ns
-    )),'leaves are all same h (children are all leaves or not) '
-'''
-print('result:')
-pprint(dfs(tree))
-
-nodes = all_nodes(tree)
-print('---- check ----')
-for node in nodes:
-    print(node.children)
-    print()
-'''
-#pprint(tuple(tree))
-
+    assert_valid(tree, max_n, keys[:end])

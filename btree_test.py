@@ -33,6 +33,7 @@ def test_insert_split():
     #root = insert(root, 7, 2)
     
 def test_insert_explicit_sequence():
+    max_n = 2
     #keys = (100, 50, 150, 200, 120, 135, 140, 170)
     #keys = (100, 50, 150, 200, 120, 135, 140, 170, 250)
     keys = (100, 50, 150, 200, 120, 135, 140, 170, 250, 145)
@@ -98,6 +99,12 @@ def test_tuple_omit(tup_idx_new):
     assert tuple_insert(new_tup, idx, tup[idx]) == tup
     
 #---------------------------------------------------------
+@given(st.integers(min_value=2, max_value=3),
+       st.lists(st.integers(), min_size = 2, unique=True))
+def test_btree(max_n, keys):
+    tree = btree(max_n, *keys)
+    print(tree)
+    assert_valid(tree, max_n, keys)
 #@pytest.mark.skip(reason="useless")
 @given(st.lists(st.integers(), min_size = 2, unique=True))
 def test_insert_prop_test_max2(keys):
@@ -105,29 +112,10 @@ def test_insert_prop_test_max2(keys):
         keys = tuple(keys)
         tree = Node(True, keys[:1])
         print('-------------------======')
-        for key in keys[1:]:
+        for end,key in enumerate(keys[1:], start=2):
             tree = insert(tree, key, max_n)
-            print(tree)
-            print(key)
-
-        ks = all_keys(tree)
-        ns = all_nodes(tree)
-        # pprint(tree)
-        if len(keys) > max_n:
-            assert (not tree.is_leaf), 'root is not leaf'
-        assert len(keys) == len(ks), \
-            'number of keys inserted/flattend btree are same'
-        assert tuple(sorted(keys)) == ks, 'keys from dfs are sorted'
-        assert all((not is_invalid(n, max_n)) for n in ns), \
-            'all nodes are valid'
-        assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
-            'all leaves have no children'
-        assert all(map(
-            lambda node: all([
-                n1.is_leaf == n2.is_leaf
-                for n1,n2 in F.pairwise(node.children)]),
-            ns
-        )),'leaves are all same h (children are all leaves or not) '
+            print(max_n); print(key); print(tree); print(len(keys) > max_n)
+            assert_valid(tree, max_n, keys[:end])
     
 @pytest.mark.skip(reason="useless")
 def test_all_keys_all_nodes():
