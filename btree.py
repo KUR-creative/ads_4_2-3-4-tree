@@ -70,8 +70,8 @@ def all_nodes(root, nodes=()):
         
 def tuple_insert(tup, idx, val):
     return tup[:idx] + (val,) + tup[idx:]
-def tuple_update(tup, idx, val):
-    return tup[:idx] + (val,) + tup[idx+1:]
+def tuple_update(tup, idx, *val):
+    return tup[:idx] + (*val,) + tup[idx+1:]
 def tuple_omit(tup, idx):
     return tup[:idx] + tup[idx+1:]
 
@@ -86,6 +86,7 @@ def index(arr, x):
 
 up_idx = 1 # (2-3, 2-3-4 just same as 1)
 def insert(node, key, max_n):
+    print(type(node), node)
     idx = bisect(node.keys, key)
     if node.is_leaf:
         new_keys = tuple_insert(node.keys, idx, key)
@@ -108,14 +109,19 @@ def insert(node, key, max_n):
                     node.children, idx, child))
         else: # leaf is splitted.
             excerpt = child
-            return node._replace(
-                keys = node.keys + excerpt.keys,
-                children = tuple_omit(
-                    node.children, idx
-                ) + excerpt.children
-            )
-            #print('n',tuple(node))
-            #print('c',tuple(child))
+            up_key = excerpt.keys[0]
+            merged = node._replace(
+                keys = tuple_insert(
+                    node.keys, idx, up_key),
+                children = tuple_update(
+                    node.children, idx, *excerpt.children))
+            '''
+            print('idx', idx)
+            print('n',tuple(node))
+            print('c',tuple(child))
+            print('m',tuple(merged))
+            '''
+            return merged
 
 def split_child(unfull_parent, child_idx, max_n, min_n=1):
     ''' 
