@@ -102,7 +102,8 @@ def test_delete_explicit_sequence():
     max_n = 2
     # no found
     tree = btree(2, 2,5,7,8)
-    assert tree == delete(tree, -100, 2) 
+    assert tree == delete(tree, -100, 2)
+    
     # leaf(replace x), steal x, merge x
     assert(delete(tree, 7, 2) 
         == Node(False, (5,), (
@@ -118,6 +119,16 @@ def test_delete_explicit_sequence():
         == Node(False, (6,), (
             Node(is_leaf=True, keys=(5,), children=()),
             Node(is_leaf=True, keys=(7,), children=()))))
+    # leaf, steal (L -> R, parent many keys), merge x
+    max_n = 3; tree = btree(max_n, 3,5,7,9,11,13,15,17)
+    assert(delete(tree, 11, max_n)
+        == Node(False, (5, 9, 15), (
+            Node(is_leaf=True, keys=(3,), children=()),
+            Node(is_leaf=True, keys=(7,), children=()),
+            Node(is_leaf=True, keys=(13,), children=()),
+            Node(is_leaf=True, keys=(17,), children=()))))
+    
+    # leaf(replace x), steal x, merge o
 #---------------------------------------------------------
 @st.composite
 def gen_tup(draw):
