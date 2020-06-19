@@ -1,3 +1,4 @@
+import random
 from pprint import pprint
 from bisect import bisect, bisect_left
 from collections import namedtuple
@@ -313,14 +314,28 @@ tree = btree(2, 2,5,7,8)
 tree = btree(2, 5,7,8,6)
 max_n = 3; tree = btree(max_n, 3,5,7,9,11,13,15,17)
 max_n = 2; tree = btree(max_n, 4,5,7,8,10)
-max_n = 2; tree = btree(max_n, 5,10,15,20,25,30)
+max_n = 2; tree = btree(max_n, 1,2,3)
+max_n = 2; tree = btree(max_n, *range(1,8))
 print('-------- before --------')
 pprint(tuple(tree))
 print('-------- after --------')
 #pprint(tuple(delete(tree, 7, max_n)))
-pprint(tuple(delete(tree, 5, max_n)))
-pprint(tuple(delete(delete(tree, 5, max_n), 25, max_n)))
+pprint(tuple(delete(tree, 1, max_n)))
+#pprint(tuple(delete(tree, 3, max_n)))
 '''
+keys = [5,10,15,20,25,30]
+max_n = 2; tree = btree(max_n, *keys)
+
+shuffled = keys[:]
+random.shuffle(shuffled)
+
+pprint(tuple(tree))
+for key in shuffled:
+    print(f'------ rm:{key} ------')
+    pprint(tuple(tree))
+    tree = delete(tree, key, max_n)
+
+
 keys = (100, 50)
 keys = (100, 50, 150)
 keys = (100, 50, 150, 200)

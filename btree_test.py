@@ -180,3 +180,23 @@ def test_insert_prop_test(keys):
             tree = insert(tree, key, max_n)
             print(max_n); print(key); print(tree); print(len(keys) > max_n)
             assert_valid(tree, max_n, keys[:end])
+            
+@st.composite
+def gen_keys_shuffled(draw):
+    keys = draw(st.lists(
+        st.integers(), min_size = 2, unique=True))
+    shuffled = keys[:]
+    random.shuffle(shuffled)
+    return keys, shuffled
+@pytest.mark.skip(reason="not now")
+@given(gen_keys_shuffled())
+def test_delete_prop_test(keys_shuffled):
+    keys, shuffled = keys_shuffled
+    for max_n in [2,3]:
+        keys = tuple(keys)
+        tree = Node(True, keys[:1])
+        print('-------------------======')
+        for end,key in enumerate(keys[1:], start=2):
+            tree = insert(tree, key, max_n)
+            print(max_n); print(key); print(tree); print(len(keys) > max_n)
+            assert_valid(tree, max_n, keys[:end])
