@@ -77,10 +77,6 @@ def test_insert_explicit_sequence():
         tree = insert(tree, key, max_n)
         assert tree == expected
 
-def test_steal_what():
-    pass
-#victim, victim_idxes, key_idx
-
 @given(st.lists(
     st.integers(min_value=0, max_value=3),
     min_size=1, max_size=4
@@ -104,12 +100,24 @@ def test_delete_explicit_sequence():
     tree = btree(2, 2,5,7,8)
     assert tree == delete(tree, -100, 2)
     
-    # leaf(replace x), steal x, merge x
+    # h=2, leaf(replace x), steal x, merge x
     assert(delete(tree, 7, 2) 
         == Node(False, (5,), (
             Node(is_leaf=True, keys=(2,), children=()),
             Node(is_leaf=True, keys=(8,), children=()))))
+    # h = 3, leaf(replace x), steal x, merge x
+    tree = btree(2, *range(5,40+5,5))
+    assert(delete(tree, 35, 2) 
+        == Node(is_leaf=False, keys=(20,), children=(
+            Node(is_leaf=False, keys=(10,), children=(
+                Node(is_leaf=True, keys=(5,), children=()),
+                Node(is_leaf=True, keys=(15,), children=()))),
+            Node(is_leaf=False, keys=(30,), children=(
+                Node(is_leaf=True, keys=(25,), children=()),
+                Node(is_leaf=True, keys=(40,), children=()))))))
+    
     # leaf(replace x), steal (L <- R), merge x
+    tree = btree(2, 2,5,7,8)
     assert(delete(tree, 2, 2) 
         == Node(False, (7,), (
             Node(is_leaf=True, keys=(5,), children=()),
@@ -139,6 +147,8 @@ def test_delete_explicit_sequence():
         == Node(False, (8,), (
             Node(is_leaf=True, keys=(5, 7), children=()),
             Node(is_leaf=True, keys=(10,), children=()))))
+    '''
+    '''
         
     
 #---------------------------------------------------------
