@@ -204,6 +204,24 @@ def get_path(tree, key): # Get path root to leaf
         node = next_node
     return nodes, idxes
 
+def steal(tree, idxes, empty_node,
+          parent, parent_key_idx,
+          victim, victim_idx, victim_key_idx):
+    # victim is not None case...
+    parent_key = parent.keys[parent_key_idx] 
+    stolen_key = victim.keys[victim_key_idx]
+    # make updated nodes
+    new_target = empty_node._replace(keys = (parent_key,))
+    new_parent = parent._replace(
+        keys = tuple_update(parent.keys, 0, stolen_key))
+    new_victim = victim._replace(
+        keys = tuple_omit(victim.keys, victim_key_idx))
+    # Update parent, sibling, target. TODO: add `updates`
+    new_tree = update(tree, idxes[:-1], new_parent)#parent
+    new_tree = update(new_tree, idxes[:-1] + [victim_idx], new_victim) #sibling
+    new_tree = update(new_tree, idxes, new_target) #target
+    return new_tree
+
 def delete(tree, key, max_n):
     # Get path root to leaf
     nodes, idxes = get_path(tree, key)
@@ -221,10 +239,15 @@ def delete(tree, key, max_n):
     # 1. parent -> empty child
     if is_empty(new_leaf.keys):
         parent = nodes[-2] # TODO: not only -2
+        parent_key_idx = 0 # TODO: not only 0
         victim, victim_idx, victim_key_idx = theft_victim(
             parent.children, leaf_node_idx)
-        print('----')
         
+        if victim is not None:
+            return steal(tree, idxes, new_leaf,
+                         parent, parent_key_idx,
+                         victim, victim_idx, victim_key_idx)
+        '''
         # victim is not None case...
         parent_key_idx = 0 # TODO: not 0 case
         parent_key = parent.keys[parent_key_idx] 
@@ -233,7 +256,6 @@ def delete(tree, key, max_n):
         new_target = new_leaf._replace(keys = (parent_key,))
         new_parent = parent._replace(
             keys = tuple_update(parent.keys, 0, stolen_key))
-        #print('->', victim.keys, victim_key_idx)
         new_victim = victim._replace(
             keys = tuple_omit(victim.keys, victim_key_idx))
         # Update parent, sibling, target. TODO: add `updates`
@@ -244,6 +266,7 @@ def delete(tree, key, max_n):
         new_tree = update(
             new_tree, idxes, new_target) #target
         return new_tree
+        '''
 
     # 2. enough child -> parent
     return update(tree, idxes, new_leaf)
