@@ -46,13 +46,15 @@ def is_invalid(node, max_n, min_n=1):
     return ret # If valid, return '' (falsey value)
 
 def assert_valid(tree, max_n, input_keys):
+    if tree is None:
+        return None
     ks = all_keys(tree)
     ns = all_nodes(tree)
     #print('lm', len(input_keys), max_n)
     if len(input_keys) > max_n:
         assert (not tree.is_leaf), 'root is not leaf'
     assert len(input_keys) == len(ks), \
-        f'{len(input_keys)} != {len(ks)}: number of keys inserted/flattend btree are not same'
+        f'len({input_keys}) != len({ks}): number of keys inserted/flattend btree are not same'
     assert tuple(sorted(input_keys)) == ks, \
         f'{sorted(input_keys)} != {ks} keys from dfs are not sorted'
     assert all((not is_invalid(n, max_n)) for n in ns), \
@@ -356,12 +358,20 @@ def delete(tree, key, max_n):
     #print('---- nodes ----'); pprint(nodes)
     #print('---- idxes ----'); pprint(idxes)
     #print('---- founds ----'); pprint(founds)
-    return _delete(tree, key, max_n)
+    ret = _delete(tree, key, max_n)
+    if is_empty(ret.keys):
+        if ret.children:
+            assert len(ret.children) == 1
+            return ret.children[0]
+        else:
+            return None
+    else:
+        return ret
+    '''
     if not any(founds): # if key not found
         return tree
 
     rev_seq = reversed(list(zip(nodes, idxes, founds)))
-    '''
     for i, (node, node_idx, found) in enumerate(rev_seq):
         node = node_idx
         if node.is_leaf:
@@ -479,13 +489,23 @@ return new_tree
 #max_n = 2; tree = btree(max_n, *range(5,80,5))
 #max_n = 2; tree = btree(2, 2,5,7,8)
 #max_n = 2; tree = btree(max_n, 4,5,7,8,10)
-max_n = 2; tree = btree(max_n, 0,1)
+#max_n = 2; tree = btree(max_n, 0,1)
+#max_n = 2; tree = btree(max_n, 0,2,1)
+keys = [1,0,2]; rm_keys = [1,2,0]
+max_n = 2; tree = btree(max_n, *keys)
 print('-------- before --------')
 pprint(tuple(tree))
 print('-------- after --------')
 #print(get_path(tree, 40)[1])
-pprint(tuple(delete(tree, 0, max_n)))
-pprint(tuple(delete(delete(tree, 0, max_n), 1, max_n)))
+tree = delete(tree, 1, max_n)
+pprint(tuple(tree))
+assert_valid(tree, max_n, rm_keys[1:])
+tree = delete(tree, 2, max_n)
+pprint(tuple(tree))
+assert_valid(tree, max_n, rm_keys[2:])
+tree = delete(tree, 0, max_n)
+pprint(tree)
+assert_valid(tree, max_n, rm_keys[3:])
 
 '''
 print('=======================')
