@@ -147,8 +147,6 @@ def test_delete_explicit_sequence():
         == Node(False, (8,), (
             Node(is_leaf=True, keys=(5, 7), children=()),
             Node(is_leaf=True, keys=(10,), children=()))))
-    '''
-    '''
         
     
 #---------------------------------------------------------
@@ -198,7 +196,8 @@ def gen_keys_shuffled(draw):
     shuffled = keys[:]
     random.shuffle(shuffled)
     return keys, shuffled
-@pytest.mark.skip(reason="not now")
+
+#@pytest.mark.skip(reason="not now")
 @given(gen_keys_shuffled())
 def test_delete_prop_test(keys_shuffled):
     keys, shuffled = keys_shuffled
@@ -208,5 +207,15 @@ def test_delete_prop_test(keys_shuffled):
         print('-------------------======')
         for end,key in enumerate(keys[1:], start=2):
             tree = insert(tree, key, max_n)
-            print(max_n); print(key); print(tree); print(len(keys) > max_n)
+            #print(max_n); print(key); print(tree); print(len(keys) > max_n)
             assert_valid(tree, max_n, keys[:end])
+            
+        '''
+        '''
+        rm_keys = list(keys)[:]
+        random.shuffle(rm_keys)
+        for beg,key in enumerate(rm_keys):
+            print('---- rm key:', key, '----', rm_keys[beg + 1:])
+            tree = delete(tree, key, max_n)
+            pprint(tuple(tree))
+            assert_valid(tree, max_n, tuple(rm_keys[beg + 1:]))

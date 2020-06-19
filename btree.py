@@ -50,13 +50,15 @@ def assert_valid(tree, max_n, input_keys):
     if len(input_keys) > max_n:
         assert (not tree.is_leaf), 'root is not leaf'
     assert len(input_keys) == len(ks), \
-        f'{len(input_keys)} == {len(ks)}: number of keys inserted/flattend btree are not same'
+        f'{len(input_keys)} != {len(ks)}: number of keys inserted/flattend btree are not same'
     assert tuple(sorted(input_keys)) == ks, \
         f'{sorted(input_keys)} != {ks} keys from dfs are not sorted'
     assert all((not is_invalid(n, max_n)) for n in ns), \
-        'all nodes are valid'
+        'some node is are invalid'
     assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
-        'all leaves have no children'
+        'some leaves have children'
+    assert all(len(n.children) != 0 for n in ns if not n.is_leaf), \
+        'some internal leaves have no children'
     assert all(map(
         lambda node: all([
             n1.is_leaf == n2.is_leaf
@@ -478,6 +480,28 @@ pprint(tuple(tree))
 print('-------- after --------')
 #print(get_path(tree, 40)[1])
 pprint(tuple(delete(tree, 7, max_n)))
+
+print('=======================')
+keys = (100, 50, 150, 200, 120)
+for max_n in [2,3]:
+    keys = tuple(keys)
+    tree = Node(True, keys[:1])
+    print('-------------------======')
+    for end,key in enumerate(keys[1:], start=2):
+        tree = insert(tree, key, max_n)
+        #print(max_n); print(key); print(tree); print(len(keys) > max_n)
+        assert_valid(tree, max_n, keys[:end])
+        
+    '''
+    rm_keys = list(keys)[:]
+    random.shuffle(rm_keys)
+    for beg,key in enumerate(rm_keys):
+        print('---- rm key:', key, '----', rm_keys[beg + 1:])
+        tree = delete(tree, key, max_n)
+        pprint(tuple(tree))
+        assert_valid(tree, max_n, tuple(rm_keys[beg + 1:]))
+    '''
+
 '''
 max_n = 2; tree = btree(max_n, *range(1,8))
 print('-------- before --------')
