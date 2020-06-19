@@ -94,9 +94,9 @@ def is_empty(coll):
 
 def tuple_insert(tup, idx, val):
     return tup[:idx] + (val,) + tup[idx:]
-def tuple_update(tup, idx, *val):
+def tup_update(tup, idx, *val):
     return tup[:idx] + (*val,) + tup[idx+1:]
-def tuple_omit(tup, idx): # TODO: negative idx case
+def tup_omit(tup, idx): # TODO: negative idx case
     return tup[:idx] + tup[idx+1:]
 
 up_idx = 1 # (2-3, 2-3-4 just same as 1)
@@ -133,7 +133,7 @@ def insert(node, key, max_n):
 
         if not has_split_child: # key is just inserted
             return node._replace(
-                children = tuple_update(
+                children = tup_update(
                     node.children, idx, child))
         else: # child has been split.
             excerpt = child
@@ -141,7 +141,7 @@ def insert(node, key, max_n):
             merged = node._replace(
                 keys = tuple_insert(
                     node.keys, idx, up_key),
-                children = tuple_update(
+                children = tup_update(
                     node.children, idx, *excerpt.children))
             return(merged if len(merged.keys) <= max_n # just insert to leaf
               else split_node(merged, max_n)) # split
@@ -154,7 +154,7 @@ def update(node, idxes, new_node):
     else:
         idx, *last = idxes
         return node._replace(
-            children = tuple_update(
+            children = tup_update(
                 node.children,
                 idx,
                 update(node.children[idx], last, new_node)))
@@ -182,14 +182,15 @@ def sibling_idxes(children, idx):
     idxes = list(range(len(children)))
     return idxes[left:idx] + idxes[right:right+1]
 
-def theft_victim(children, idx):
+def theft_victim(children, sibling_idxes, target_idx):
     ''' return: valid sibling, sib idx, key idx. left first. '''
-    for sib_idx in sibling_idxes(children, idx):
+    for sib_idx in sibling_idxes:
         victim = children[sib_idx]
         len_keys = len(victim.keys)
         if len_keys > 1:
             return (victim, sib_idx,
-                    len_keys - 1 if sib_idx == idx - 1 else 0)
+                    len_keys - 1 if sib_idx == target_idx - 1
+                    else 0)
     return None, None, None
     
 def get_path(tree, key): # Get path root to leaf
@@ -213,15 +214,42 @@ def steal(tree, idxes, empty_node,
     # make updated nodes
     new_target = empty_node._replace(keys = (parent_key,))
     new_parent = parent._replace(
-        keys = tuple_update(
+        keys = tup_update(
             parent.keys, parent_key_idx, stolen_key))
     new_victim = victim._replace(
-        keys = tuple_omit(victim.keys, victim_key_idx))
+        keys = tup_omit(victim.keys, victim_key_idx))
     # Update parent, sibling, target. TODO: add `updates`
     new_tree = update(tree, idxes[:-1], new_parent)#parent
     new_tree = update(new_tree, idxes[:-1] + [victim_idx], new_victim) #sibling
     new_tree = update(new_tree, idxes, new_target) #target
     return new_tree
+
+def merge(tree, idxes, leaf, leaf_idx, parent, sib_idxes):
+    sib_idx = sib_idxes[0]
+    sibling = parent.children[sib_idx]
+
+    assert leaf_idx >= 0
+    parent_key_idx =(
+        leaf_idx - 1 if leaf_idx > 0 else leaf_idx)
+    #   merge with left,          merge with right
+
+    new_keys = (
+        sibling.keys[0], parent.keys[parent_key_idx]
+    ) if leaf_idx > 0 else (
+        parent.keys[parent_key_idx], sibling.keys[0]
+    )
+
+    merged = leaf._replace(keys = new_keys)
+    merged_idx = parent_key_idx # idx calc
+    omitted_parent = parent._replace(
+        keys = tup_omit(parent.keys, parent_key_idx),
+        children = tup_omit(parent.children, leaf_idx))
+    new_parent = omitted_parent._replace(
+        children = tup_update(
+            omitted_parent.children,
+            merged_idx,
+            merged))
+    return update(tree, idxes[:-1], new_parent)
 
 def delete(tree, key, max_n):
     # Get path root to leaf
@@ -232,32 +260,32 @@ def delete(tree, key, max_n):
     leaf_key_idx = index(leaf.keys, key) # idx in leaf.keys
     new_leaf = leaf._replace(
         keys =(leaf.keys if leaf_key_idx is None else
-               tuple_omit(leaf.keys, leaf_key_idx))
+               tup_omit(leaf.keys, leaf_key_idx))
     )
-    # ---- Make valid b-tree ----
+    # ---- Make valid b-tree, replace, steal, merge ----
     if is_empty(new_leaf.keys):
         parent = nodes[-2] # TODO: not only -2
         parent_idx = None # TODO: need?
         
+        sib_idxes = sibling_idxes(parent.children, leaf_idx)
         victim, victim_idx, victim_key_idx = theft_victim(
-            parent.children, leaf_idx)
-        parent_key_idx =(
-            leaf_idx if leaf_idx + 1 == victim_idx else
-            leaf_idx - 1 if leaf_idx - 1 == victim_idx else
-            None) # it crashes!
+            parent.children, sib_idxes, leaf_idx)
         
-        if victim is not None:
-            return steal(tree, idxes, new_leaf,
-                         parent, parent_idx, parent_key_idx,
-                         victim, victim_idx, victim_key_idx)
-        #else:
-            #merge
-
-    # 2. enough child -> parent
+        assert sib_idxes, 'It cannot be empty'
+        if victim is None:
+            return merge(
+                tree, idxes, leaf, leaf_idx, parent, sib_idxes)
+        else:
+            parent_key_idx =(
+                leaf_idx if leaf_idx + 1 == victim_idx else
+                leaf_idx - 1 if leaf_idx - 1 == victim_idx else
+                None) # it crashes!
+            return steal(
+                tree, idxes, new_leaf,
+                parent, parent_idx, parent_key_idx,
+                victim, victim_idx, victim_key_idx)
+        
     return update(tree, idxes, new_leaf)
-    #pprint(nodes)
-    print('idxes:', idxes)
-    return tree
 
 '''
 # victim is not None case...
@@ -267,9 +295,9 @@ stolen_key = victim.keys[victim_key_idx]
 
 new_target = new_leaf._replace(keys = (parent_key,))
 new_parent = parent._replace(
-    keys = tuple_update(parent.keys, 0, stolen_key))
+    keys = tup_update(parent.keys, 0, stolen_key))
 new_victim = victim._replace(
-    keys = tuple_omit(victim.keys, victim_key_idx))
+    keys = tup_omit(victim.keys, victim_key_idx))
 # Update parent, sibling, target. TODO: add `updates`
 new_tree = update(
     tree, idxes[:-1], new_parent)#parent
@@ -284,10 +312,14 @@ return new_tree
 tree = btree(2, 2,5,7,8)
 tree = btree(2, 5,7,8,6)
 max_n = 3; tree = btree(max_n, 3,5,7,9,11,13,15,17)
+max_n = 2; tree = btree(max_n, 4,5,7,8,10)
+max_n = 2; tree = btree(max_n, 5,10,15,20,25,30)
 print('-------- before --------')
 pprint(tuple(tree))
 print('-------- after --------')
-pprint(tuple(delete(tree, 11, max_n)))
+#pprint(tuple(delete(tree, 7, max_n)))
+pprint(tuple(delete(tree, 5, max_n)))
+pprint(tuple(delete(delete(tree, 5, max_n), 25, max_n)))
 '''
 keys = (100, 50)
 keys = (100, 50, 150)

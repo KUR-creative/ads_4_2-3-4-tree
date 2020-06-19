@@ -128,7 +128,19 @@ def test_delete_explicit_sequence():
             Node(is_leaf=True, keys=(13,), children=()),
             Node(is_leaf=True, keys=(17,), children=()))))
     
-    # leaf(replace x), steal x, merge o
+    # leaf(replace x), steal x, merge(idx > 0)
+    max_n = 2; tree = btree(max_n, 4,5,7,8,10)
+    assert(delete(tree, 7, max_n)
+        == Node(False, (8,), (
+            Node(is_leaf=True, keys=(4, 5), children=()),
+            Node(is_leaf=True, keys=(10,), children=()))))
+    # leaf(replace x), steal x, merge(idx = 0)
+    assert(delete(tree, 4, max_n)
+        == Node(False, (8,), (
+            Node(is_leaf=True, keys=(5, 7), children=()),
+            Node(is_leaf=True, keys=(10,), children=()))))
+        
+    
 #---------------------------------------------------------
 @st.composite
 def gen_tup(draw):
@@ -140,14 +152,14 @@ def gen_tup(draw):
 @given(gen_tup())
 def test_tuple_update(tup_idx_new):
     tup,idx,new = tup_idx_new
-    new_tup = tuple_update(tup, idx, new)
+    new_tup = tup_update(tup, idx, new)
     print(new_tup)
     assert new_tup[idx] == new
 
 @given(gen_tup())
-def test_tuple_omit(tup_idx_new):
+def test_tup_omit(tup_idx_new):
     tup, idx, _ = tup_idx_new
-    new_tup = tuple_omit(tup, idx)
+    new_tup = tup_omit(tup, idx)
     assert tuple_insert(new_tup, idx, tup[idx]) == tup
     
 #---------------------------------------------------------
@@ -159,7 +171,7 @@ def test_btree(max_n, keys):
     assert_valid(tree, max_n, keys)
     
 @given(st.lists(st.integers(), min_size = 2, unique=True))
-def test_insert_prop_test_max2(keys):
+def test_insert_prop_test(keys):
     for max_n in [2,3]:
         keys = tuple(keys)
         tree = Node(True, keys[:1])
