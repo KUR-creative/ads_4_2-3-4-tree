@@ -97,7 +97,7 @@ def test_sibling_idxes(xs_idx):
         xs[sidx] # assert no crash
         assert ans_idx == sidx - 1 or ans_idx == sidx + 1
 
-@pytest.mark.skip(reason="not now")
+#@pytest.mark.skip(reason="not now")
 def test_delete_explicit_sequence():
     max_n = 2
     # no found
@@ -115,8 +115,8 @@ def test_delete_explicit_sequence():
             Node(is_leaf=True, keys=(8,), children=()))))
     # leaf(replace x), steal (L -> R), merge x
     assert(delete(btree(2, 5,7,8,6), 8, 2)
-        == Node(False, (5,), (
-            Node(is_leaf=True, keys=(6,), children=()),
+        == Node(False, (6,), (
+            Node(is_leaf=True, keys=(5,), children=()),
             Node(is_leaf=True, keys=(7,), children=()))))
 #---------------------------------------------------------
 @st.composite
@@ -146,7 +146,7 @@ def test_btree(max_n, keys):
     tree = btree(max_n, *keys)
     print(tree)
     assert_valid(tree, max_n, keys)
-#@pytest.mark.skip(reason="useless")
+    
 @given(st.lists(st.integers(), min_size = 2, unique=True))
 def test_insert_prop_test_max2(keys):
     for max_n in [2,3]:
@@ -157,55 +157,3 @@ def test_insert_prop_test_max2(keys):
             tree = insert(tree, key, max_n)
             print(max_n); print(key); print(tree); print(len(keys) > max_n)
             assert_valid(tree, max_n, keys[:end])
-    
-@pytest.mark.skip(reason="useless")
-def test_all_keys_all_nodes():
-    
-    #tree = Node(False, (6,), (leaf(5), leaf(7)))
-    print('===rr=====')
-    #tree = Node(False, (5,10), (leaf(0,1), leaf(7,8), leaf(15)))
-    tree = Node(is_leaf=False,
-        keys=(1,),
-        children=(Node(is_leaf=True,
-                        keys=(0,),
-                        children=()),
-                Node(is_leaf=True,
-                        keys=(1,),
-                        children=())))
-    ks = all_keys(tree)
-    ns = all_nodes(tree)
-    print(ks)
-    #print([n.keys for n in ns])
-    #pprint(ns)
-    pprint([n.keys for n in ns])
-    print(len(ns))
-    print('====--------======')
-    assert False
-    
-    tree = Node(
-        False, (5,),
-        (Node(False, (1,), (leaf(0), leaf(2))),
-         Node(False, (8,10), (leaf(7), leaf(9), leaf(15)))))
-    ks = all_keys(tree)
-    ns = all_nodes(tree)
-    print(ks)
-    print(len(ns))
-    pprint([n.keys for n in ns])
-    assert False
-
-@pytest.mark.skip(reason="no way of currently testing this")
-def test_split_manually():
-    max_n = 3
-    full_child = Node(True, (11,12,13))
-    unfull_parent = Node(
-        False, (10,), (full_child, Node(True, (20,))))
-
-    actual = split_child(unfull_parent, 0,)
-    expect = Node(False, (10,),
-                   (Node(True, (11,)), Node(True, (13,))))
-    assert not is_invalid(unfull_parent)
-    assert not is_invalid(full_child)
-    assert not is_invalid(actual)
-    assert not is_invalid(expect)
-    assert actual == expect, rep(actual)+' != '+rep(expect)
-        

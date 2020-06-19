@@ -192,8 +192,7 @@ def theft_victim(children, idx):
                     len_keys - 1 if sib_idx == idx - 1 else 0)
     return None, None, None
     
-def delete(tree, key, max_n):
-    # Get path root to leaf
+def get_path(tree, key): # Get path root to leaf
     node = tree
     nodes = [node]
     idxes = []
@@ -203,6 +202,11 @@ def delete(tree, key, max_n):
         nodes.append(next_node)
         idxes.append(node_idx)
         node = next_node
+    return nodes, idxes
+
+def delete(tree, key, max_n):
+    # Get path root to leaf
+    nodes, idxes = get_path(tree, key)
     # Update leaf
     leaf = nodes[-1]
     leaf_node_idx = idxes[-1]
