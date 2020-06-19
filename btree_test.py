@@ -77,6 +77,27 @@ def test_insert_explicit_sequence():
         tree = insert(tree, key, max_n)
         assert tree == expected
 
+def test_steal_what():
+    pass
+#victim, victim_idxes, key_idx
+
+@given(st.lists(
+    st.integers(min_value=0, max_value=3),
+    min_size=1, max_size=4
+).flatmap(
+    lambda xs: st.tuples(
+        st.just(xs),
+        st.integers(min_value=-1, max_value=len(xs) - 1))
+))
+def test_sibling_idxes(xs_idx):
+    xs, idx = xs_idx
+    sib_idxes = sibling_idxes(xs, idx)
+    ans_idx = idx + len(xs) if idx < 0 else idx
+    for sidx in sib_idxes:
+        xs[sidx] # assert no crash
+        assert ans_idx == sidx - 1 or ans_idx == sidx + 1
+
+@pytest.mark.skip(reason="not now")
 def test_delete_explicit_sequence():
     max_n = 2
     # no found
