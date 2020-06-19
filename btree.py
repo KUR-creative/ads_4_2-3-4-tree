@@ -20,6 +20,8 @@ def btree(max_n, *keys):
     return root
 
 def is_invalid(node, max_n, min_n=1):
+    if node is None:
+        return None
     if type(node) is not Node:
         return 'NotNode'
     n = len(node.keys)
@@ -122,6 +124,8 @@ def split_node(node, max_n):
 # max_n = 2: 2-3
 # max_n = 3: 2-3-4
 def insert(node, key, max_n):
+    if node is None:
+        return leaf(key)
     idx = bisect(node.keys, key)
     if node.is_leaf:
         new_keys = tuple_insert(node.keys, idx, key)
@@ -474,13 +478,16 @@ return new_tree
 #max_n = 2; tree = btree(max_n, 4,5,7,8,10)
 #max_n = 2; tree = btree(max_n, *range(5,80,5))
 #max_n = 2; tree = btree(2, 2,5,7,8)
-max_n = 2; tree = btree(max_n, 4,5,7,8,10)
+#max_n = 2; tree = btree(max_n, 4,5,7,8,10)
+max_n = 2; tree = btree(max_n, 0,1)
 print('-------- before --------')
 pprint(tuple(tree))
 print('-------- after --------')
 #print(get_path(tree, 40)[1])
-pprint(tuple(delete(tree, 7, max_n)))
+pprint(tuple(delete(tree, 0, max_n)))
+pprint(tuple(delete(delete(tree, 0, max_n), 1, max_n)))
 
+'''
 print('=======================')
 keys = (100, 50, 150, 200, 120)
 for max_n in [2,3]:
@@ -491,8 +498,8 @@ for max_n in [2,3]:
         tree = insert(tree, key, max_n)
         #print(max_n); print(key); print(tree); print(len(keys) > max_n)
         assert_valid(tree, max_n, keys[:end])
-        
-    '''
+'''        
+'''
     rm_keys = list(keys)[:]
     random.shuffle(rm_keys)
     for beg,key in enumerate(rm_keys):

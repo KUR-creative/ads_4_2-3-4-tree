@@ -11,6 +11,7 @@ from btree import *
 
 def test_insert_no_split():
     max_n = 2
+    assert insert(None, 20, 2) == Node(True, (20,), ())
     assert insert(leaf(10), 20, 2) == Node(True, (10, 20), ())
     assert insert(leaf(20), 10, 2) == Node(True, (10, 20), ())
     
@@ -211,7 +212,6 @@ def test_delete_prop_test(keys_shuffled):
             assert_valid(tree, max_n, keys[:end])
             
         '''
-        '''
         rm_keys = list(keys)[:]
         random.shuffle(rm_keys)
         for beg,key in enumerate(rm_keys):
@@ -219,3 +219,4 @@ def test_delete_prop_test(keys_shuffled):
             tree = delete(tree, key, max_n)
             pprint(tuple(tree))
             assert_valid(tree, max_n, tuple(rm_keys[beg + 1:]))
+        '''
