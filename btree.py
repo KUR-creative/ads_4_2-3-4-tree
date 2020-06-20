@@ -321,7 +321,7 @@ def empty_node_idx(children):
 
 
 def _delete(node, key, max_n):
-    #print('---- go deep ----'); pprint(tuple(node))
+    print('---- go deep ----'); pprint(tuple(node))
     if node.is_leaf:
         idx = index(node.keys, key) # idx in node.keys
         return node._replace(
@@ -374,6 +374,7 @@ def _delete(node, key, max_n):
         else: # merge
             sib_idx = sib_idxes[0]
             sibling = children[sib_idx]
+            #print('sibling', sibling); pprint(tuple(sibling))
             
             key_idx = empty_idx - (1 if empty_idx > 0 else 0)
             new_empty_node = empty_node._replace(
@@ -382,11 +383,12 @@ def _delete(node, key, max_n):
                 ) if empty_idx > 0 else (
                     new_keys[key_idx], sibling.keys[0]
                 ),
-                children = tup_insert(
-                    empty_node.children,
-                    sib_idx,
-                    *sibling.children
+                children = (
+                    *sibling.children, *empty_node.children
+                ) if empty_idx > sib_idx else (
+                    *empty_node.children, *sibling.children
                 )
+                #tup_insert(empty_node.children, sib_idx, *sibling.children)
             )
             # build new keys
             new_keys = tup_omit(new_keys, key_idx)
@@ -405,7 +407,7 @@ def _delete(node, key, max_n):
             children = children
         )
 
-        #print('---- upward ----'); pprint(tuple(ret))
+        print('---- upward ----'); pprint(tuple(ret))
         return ret
 
     
@@ -690,9 +692,8 @@ for end,key in enumerate(keys[1:], start=2):
 #keys, rm_keys = [0, 1, -1, 2, -2, 3, -3], [-2, -1, 1, 0, 3, 2, -3]
 #keys, rm_keys = [0, 1, -1, 2, -2, -3, -4, -5], [-2, 1, -3, -1, 0, 2, -5, -4]
 #keys, rm_keys = [0, 1, -1, 2, -2, 3, -3, 4, 5], [4, 3, 1, 2, -2, -1, 0, 5, -3]
-'''
-'''
-keys, rm_keys = [0, 1, -1, -2, 3, -3, -4, 2, -5], [2, -3, 1, -2, 3, -1, 0, -5, -4]
+#keys, rm_keys = [0, 1, -1, -2, 3, -3, -4, 2, -5], [2, -3, 1, -2, 3, -1, 0, -5, -4]
+keys, rm_keys = [1, -1, 2, -2, 5, 6, 0, 4, 7, 8, 3], [7, 8, -1, 2, 6, -2, 4, 5, 1, 3, 0]
 max_n = 2; tree = btree(max_n, *keys)
 
 print('-------- before --------')
