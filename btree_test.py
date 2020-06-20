@@ -212,10 +212,10 @@ def test_delete_prop_test(keys_shuffled):
             assert_valid(tree, max_n, keys[:end])
             
         for beg,key in enumerate(shuffled):
-            pprint(tuple(tree) if tree is not None else tree)
-            print('---- rm key:', key, '----', shuffled, shuffled[beg + 1:])
+            #pprint(tuple(tree) if tree is not None else tree)
+            #print('---- rm key:', key, '----', shuffled, shuffled[beg + 1:])
             tree = delete(tree, key, max_n)
-            pprint(tuple(tree) if tree is not None else tree)
+            #pprint(tuple(tree) if tree is not None else tree)
             assert_valid(tree, max_n, tuple(shuffled[beg + 1:]))
         '''
         '''

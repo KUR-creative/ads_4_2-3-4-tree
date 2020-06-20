@@ -57,8 +57,9 @@ def assert_valid(tree, max_n, input_keys):
         f'len({input_keys}) != len({ks}): number of keys inserted/flattend btree are not same'
     assert tuple(sorted(input_keys)) == ks, \
         f'{sorted(input_keys)} != {ks} keys from dfs are not sorted'
-    assert all((not is_invalid(n, max_n)) for n in ns), \
-        'some node is are invalid'
+    for n in ns:
+        assert not is_invalid(n, max_n), \
+        f'some nodes are invalid:\n {is_invalid(n, max_n)}'
     assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
         'some leaves have children'
     assert all(len(n.children) != 0 for n in ns if not n.is_leaf), \
@@ -99,8 +100,8 @@ def all_nodes(root, nodes=()):
 def is_empty(coll):
     return (not coll)
 
-def tuple_insert(tup, idx, val):
-    return tup[:idx] + (val,) + tup[idx:]
+def tup_insert(tup, idx, *val):
+    return tup[:idx] + (*val,) + tup[idx:]
 def tup_update(tup, idx, *val):
     return tup[:idx] + (*val,) + tup[idx+1:]
 def tup_omit(tup, idx): # TODO: negative idx case
@@ -130,7 +131,7 @@ def insert(node, key, max_n):
         return leaf(key)
     idx = bisect(node.keys, key)
     if node.is_leaf:
-        new_keys = tuple_insert(node.keys, idx, key)
+        new_keys = tup_insert(node.keys, idx, key)
         new_node = node._replace(keys = new_keys)
         return(new_node if len(new_keys) <= max_n # just insert to leaf
           else split_node(new_node, max_n)) # split
@@ -148,7 +149,7 @@ def insert(node, key, max_n):
             excerpt = child
             up_key = excerpt.keys[0]
             merged = node._replace(
-                keys = tuple_insert(
+                keys = tup_insert(
                     node.keys, idx, up_key),
                 children = tup_update(
                     node.children, idx, *excerpt.children))
@@ -217,8 +218,10 @@ def theft_victim(children, sibling_idxes, target_idx):
     
 def get_path(tree, key): # Get path root to leaf
     '''
-    node0 -------- node1 ------- ...
-    None -- idx1 -------- idx2 ---- ...
+    returns:
+    founds: t/f ---------- t/f ------------- ...
+    nodes: node0 -------- node1 ------- ...
+    idxes: None -- idx1 -------- idx2 ---- ...
     '''
     node = tree
     
@@ -289,6 +292,8 @@ def empty_node_idx(children):
 
 
 def _delete(node, key, max_n):
+    print('---- go deep ----')
+    pprint(tuple(node))
     if node.is_leaf:
         idx = index(node.keys, key) # idx in node.keys
         return node._replace(
@@ -296,22 +301,23 @@ def _delete(node, key, max_n):
                 tup_omit(node.keys, idx)))
     else:
         idx = bisect(node.keys, key)
-        new_children = tup_update(
+        print('idx', idx)
+        children = tup_update(
             node.children,
             idx,
             _delete(node.children[idx], key, max_n))
         
-        empty_idx = empty_node_idx(new_children)
+        empty_idx = empty_node_idx(children)
         # no steal, no merge
         if empty_idx is None:
-            return node._replace(children = new_children)
+            return node._replace(children = children)
         
-        empty_node = new_children[empty_idx]
+        empty_node = children[empty_idx]
         new_keys = node.keys
         
-        sib_idxes = sibling_idxes(new_children, empty_idx)
+        sib_idxes = sibling_idxes(children, empty_idx)
         victim, victim_idx, up_key = theft_victim(
-            new_children, sib_idxes, empty_idx)
+            children, sib_idxes, empty_idx)
         
         if victim: # steal
             key_idx =(
@@ -322,42 +328,82 @@ def _delete(node, key, max_n):
             new_keys = tup_update(
                 new_keys, key_idx, up_key)
             # build new children
-            child_lst = list(new_children)
+            child_lst = list(children)
             child_lst[empty_idx] = empty_node._replace(
                 keys = (down_key,))
             child_lst[victim_idx] = victim
-            new_children = tuple(child_lst)
+            children = tuple(child_lst)
         else: # merge
+            print(' -- node -- ')
+            pprint(tuple(node))
+            print(' -- children -- ')
+            pprint(children)
             sib_idx = sib_idxes[0]
-            sibling = new_children[sib_idx]
+            sibling = children[sib_idx]
             
             key_idx = empty_idx - (1 if empty_idx > 0 else 0)
+            #print(' -- sibling -- ')
+            #pprint(sibling)
+            #print(' -- empty_node -- ')
+            #pprint(empty_node)
+            #print('sib_idx', sib_idx)
             new_empty_node = empty_node._replace(
                 keys = (
                     sibling.keys[0], new_keys[key_idx]
                 ) if empty_idx > 0 else (
                     new_keys[key_idx], sibling.keys[0]
+                ),
+                children = tup_insert(
+                    empty_node.children,
+                    sib_idx,
+                    *sibling.children
                 )
             )
+            #print(' -- new_empty_node -- ')
+            #pprint(new_empty_node)
+            
             # build new keys
             new_keys = tup_omit(new_keys, key_idx)
             # build new children
-            new_children = tup_update(
-                new_children, empty_idx, new_empty_node)
-            new_children = tup_omit(
-                new_children, sib_idx)
+            children = tup_update(
+                children, empty_idx, new_empty_node)
+            children = tup_omit(
+                children, sib_idx)
             
-        return node._replace(
+            #print(' -- children after -- ')
+            #pprint(children)
+            #print(' -- -- -- --')
+            
+        ret = node._replace(
             keys = new_keys,
-            children = new_children
+            children = children
         )
+
+        print('---- upward ----')
+        pprint(tuple(ret))
+        return ret
+
     
 def delete(tree, key, max_n):
     # Get path root to leaf
-    #nodes, idxes, founds = get_path(tree, key) # len:nodes + 1 = idxes
+    nodes, idxes, founds = get_path(tree, key)
     #print('---- nodes ----'); pprint(nodes)
     #print('---- idxes ----'); pprint(idxes)
-    #print('---- founds ----'); pprint(founds)
+    # print('---- founds ----'); pprint(founds)
+    if not any(founds):
+        return tree
+    if founds[-1] is False: # not leaf
+        # remove leftmost key from right node
+        r_node = nodes[-1] 
+        mv_key = r_node.keys[0]
+        new_r_node = r_node._replace(
+            keys = tup_omit(r_node.keys, 0))
+        # make new tree
+        tree = update(tree, idxes[1:], new_r_node)
+        tree = tree._replace(
+            keys = tup_update(
+                tree.keys, idxes[1] - 1, mv_key))
+
     ret = _delete(tree, key, max_n)
     if is_empty(ret.keys):
         if ret.children:
@@ -491,10 +537,24 @@ return new_tree
 #max_n = 2; tree = btree(max_n, 4,5,7,8,10)
 #max_n = 2; tree = btree(max_n, 0,1)
 #max_n = 2; tree = btree(max_n, 0,2,1)
-keys = [1,0,2]; rm_keys = [1,2,0]
+#keys = [1,0,2]; rm_keys = [1,2,0]; max_n = 2; tree = btree(max_n, *keys)
+keys,rm_keys = [0, 1, 2, -1, -2, 3, 4], [-2, 2, 1, 0, 3, -1, 4]
 max_n = 2; tree = btree(max_n, *keys)
+
 print('-------- before --------')
 pprint(tuple(tree))
+for beg,key in enumerate(rm_keys):
+    #pprint(tuple(tree) if tree is not None else tree)
+    print('==== rm key:', key, '====', rm_keys[beg + 1:])
+    tree = delete(tree, key, max_n)
+    pprint(tuple(tree) if tree is not None else tree)
+    pprint('==========')
+    assert_valid(tree, max_n, tuple(rm_keys[beg + 1:]))
+'''
+'''
+
+    
+'''
 print('-------- after --------')
 #print(get_path(tree, 40)[1])
 tree = delete(tree, 1, max_n)
@@ -507,7 +567,8 @@ tree = delete(tree, 0, max_n)
 pprint(tree)
 assert_valid(tree, max_n, rm_keys[3:])
 
-'''
+
+
 print('=======================')
 keys = (100, 50, 150, 200, 120)
 for max_n in [2,3]:
