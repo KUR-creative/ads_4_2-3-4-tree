@@ -172,6 +172,37 @@ def test_tup_omit(tup_idx_new):
     assert tup_insert(new_tup, idx, tup[idx]) == tup
     
 #---------------------------------------------------------
+@st.composite
+def gen_keys_included_excluded_max_n(draw):
+    keys_pool = draw(st.lists(
+        st.integers(), min_size = 3, unique=True))
+    min_idx = len(keys_pool) // 2
+    max_idx = len(keys_pool) - 1
+    keys, excluded = F.lsplit_at(
+        random.randint(min_idx, max_idx), keys_pool)
+    included = keys[:]
+    random.shuffle(included)
+    max_n = random.randint(2,3)
+    return keys, included, excluded, max_n
+
+@given(gen_keys_included_excluded_max_n())
+def test_find(keys_included_excluded_max_n):
+    keys,includeds,excludeds,max_n = keys_included_excluded_max_n
+    keys = tuple(keys)
+    tree = Node(True, keys[:1])
+    print('-------------------======')
+    for end,key in enumerate(keys[1:], start=2):
+        tree = insert(tree, key, max_n)
+        assert_valid(tree, max_n, keys[:end])
+    for included_key in includeds:
+        node = find(tree, included_key)
+        assert node is not None
+        assert included_key in node.keys
+    for excluded_key in excludeds:
+        node = find(tree, excluded_key)
+        assert node is None
+
+
 @given(st.integers(min_value=2, max_value=3),
        st.lists(st.integers(), min_size = 2, unique=True))
 def test_btree(max_n, keys):

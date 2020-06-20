@@ -10,6 +10,13 @@ import funcy as F
 def is_empty(coll):
     return (not coll)
 
+def index(a, x):
+    'Locate the leftmost value exactly equal to x'
+    i = bisect_left(a, x)
+    if i != len(a) and a[i] == x:
+        return i
+    return None
+
 #--------------------------------------------------------------
 Node = namedtuple(
     'Node', 'is_leaf keys children', defaults=[()])
@@ -120,6 +127,16 @@ def split_node(node, max_n):
                  keys = node.keys[up_idx + 1:],
                  children = node.children[up_idx+1:])))
 
+def find(node, key):
+    if key in node.keys:
+        return node
+    else:
+        idx = bisect(node.keys, key)
+        if is_empty(node.children):
+            return None
+        else:
+            return find(node.children[idx], key) 
+
 # max_n = 2: 2-3
 # max_n = 3: 2-3-4
 def insert(node, key, max_n):
@@ -167,13 +184,6 @@ def update(node, idxes, new_node):
                 idx,
                 update(node.children[idx], last, new_node)))
     
-def index(a, x):
-    'Locate the leftmost value exactly equal to x'
-    i = bisect_left(a, x)
-    if i != len(a) and a[i] == x:
-        return i
-    return None
-
 def sibling_idxes(children, idx):
     ''' return: index(es) of sibling, if no sibling, []. '''
     if idx is None:
@@ -538,3 +548,15 @@ new_tree = update(
     new_tree, idxes, new_target) #target
 return new_tree
 '''
+
+#max_n = 3
+max_n = 2
+#keys = [0, 1, -1, 2]
+keys = [0, 1]
+includeds = [0, 1]
+excludeds = [-1]
+tree = btree(2, *keys)
+#print(tuple(tree))
+#print(find(tree, 0))
+#print(find(tree, 1))
+print(find(tree, -1))
