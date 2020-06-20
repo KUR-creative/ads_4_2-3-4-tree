@@ -161,10 +161,6 @@ def update(node, idxes, new_node):
     Go to deep along to idxes..
     if idxes are empty, then change the node with new node
     '''
-    #print('--x--')
-    #print(tuple(node))
-    #print(':', idxes)
-    #print(tuple(new_node))
     if not idxes: # empty
         return new_node
     else:
@@ -220,19 +216,21 @@ def theft_victim(children, sibling_idxes, target_idx):
     pprint(children[3])
     '''
     for idx in sibling_idxes:
-        print('wtf c', children)
-        print('wtf i', idx)
         victim = children[idx]
         
         keys = victim.keys
         key_idx = len(keys) - 1 if idx == target_idx - 1 else 0
         up_key = keys[key_idx]
         
-        #if is_empty(victim.children):
-        child_idx = (None if is_empty(victim.children) else
-                     len(victim.children) - 1 if idx == target_idx - 1 else 0)
-        stolen_child = None if child_idx is None else victim.children[child_idx]
-        new_victim_children = victim.children if child_idx is None else tup_omit(victim.children, child_idx)
+        if is_empty(victim.children):
+            child_idx = None
+            stolen_child = None
+            new_victim_children = victim.children
+        else:
+            child_idx =(len(victim.children) - 1
+                        if idx == target_idx - 1 else 0)
+            stolen_child = victim.children[child_idx]
+            new_victim_children = tup_omit(victim.children, child_idx)
         
         if len(keys) > 1:
             return (
@@ -260,7 +258,6 @@ def get_path(tree, key): # Get path root to leaf
     founds= [key in node.keys]
     while not node.is_leaf:
         node_idx = bisect(node.keys, key)
-        print('n keys', node.keys, 'key', key, 'idx', node_idx)
 
         next_node = node.children[node_idx]
         nodes.append(next_node)
@@ -324,7 +321,7 @@ def empty_node_idx(children):
 
 
 def _delete(node, key, max_n):
-    print('---- go deep ----'); pprint(tuple(node))
+    #print('---- go deep ----'); pprint(tuple(node))
     if node.is_leaf:
         idx = index(node.keys, key) # idx in node.keys
         return node._replace(
@@ -332,7 +329,6 @@ def _delete(node, key, max_n):
                 tup_omit(node.keys, idx)))
     else:
         idx = bisect(node.keys, key)
-        print('  keys', node.keys, 'key', key, 'idx', idx)
         children = tup_update(
             node.children,
             idx,
@@ -347,18 +343,13 @@ def _delete(node, key, max_n):
         new_keys = node.keys
         
         sib_idxes = sibling_idxes(children, empty_idx)
-        print(' :children')
-        pprint(children)
-        print(' :sib_idxes')
-        pprint(sib_idxes)
-        print(' :empty_idx')
-        pprint(empty_idx)
+        #print(' :children'); pprint(children)
+        #print(' :sib_idxes'); pprint(sib_idxes)
+        #print(' :empty_idx'); pprint(empty_idx)
         victim, victim_idx, up_key, stolen_child = theft_victim(
             children, sib_idxes, empty_idx)
         
         if victim: # steal
-            print('--- victim  ----------------------------------')
-            pprint(tuple(victim))
             key_idx =(
                 empty_idx if empty_idx + 1 == victim_idx else
                 victim_idx)
@@ -381,17 +372,10 @@ def _delete(node, key, max_n):
             child_lst[victim_idx] = victim
             children = tuple(child_lst)
         else: # merge
-            #print(' -- node -- '); pprint(tuple(node))
-            #print(' -- children -- '); pprint(children)
             sib_idx = sib_idxes[0]
             sibling = children[sib_idx]
             
             key_idx = empty_idx - (1 if empty_idx > 0 else 0)
-            #print(' -- sibling -- ')
-            #pprint(sibling)
-            #print(' -- empty_node -- ')
-            #pprint(empty_node)
-            #print('sib_idx', sib_idx)
             new_empty_node = empty_node._replace(
                 keys = (
                     sibling.keys[0], new_keys[key_idx]
@@ -404,9 +388,6 @@ def _delete(node, key, max_n):
                     *sibling.children
                 )
             )
-            #print(' -- new_empty_node -- ')
-            #pprint(new_empty_node)
-            
             # build new keys
             new_keys = tup_omit(new_keys, key_idx)
             # build new children
@@ -424,7 +405,7 @@ def _delete(node, key, max_n):
             children = children
         )
 
-        print('---- upward ----'); pprint(tuple(ret))
+        #print('---- upward ----'); pprint(tuple(ret))
         return ret
 
     
@@ -451,11 +432,6 @@ def delete(tree, key, max_n):
         new_found = found_node._replace(
             keys = tup_update(
                 found_node.keys, path[found_depth] - 1, mv_key))
-        #print('-- found:', founds)
-        #print('-- path:', path)
-        #print('-- found path:', found_path)
-        #print('-- found depth:', found_depth)
-        #print('-- found node:', found_node)
         
         # update tree
         found_path = path[:found_depth]
