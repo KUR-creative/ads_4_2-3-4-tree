@@ -392,7 +392,7 @@ def delete(tree, key, max_n):
     # Get path root to leaf
     nodes, path, founds = get_path(tree, key)
     #print('---- nodes ----'); pprint(nodes)
-    print('---- path ----'); pprint(path)
+    #print('---- path ----'); pprint(path)
     # print('---- founds ----'); pprint(founds)
     #print('-- origin --'); pprint(tuple(tree))
     if not any(founds):
@@ -408,7 +408,7 @@ def delete(tree, key, max_n):
         found_node = nodes[found_depth]
         new_found = found_node._replace(
             keys = tup_update(
-                tree.keys, path[found_depth] - 1, mv_key))
+                found_node.keys, path[found_depth] - 1, mv_key))
         #print('-- found:', founds)
         #print('-- path:', path)
         #print('-- found path:', found_path)
@@ -421,7 +421,7 @@ def delete(tree, key, max_n):
         tree = update(tree, path, new_r_node)
         # update key
         key = mv_key
-        #print('-- replaced --'); pprint(tuple(tree))
+        print('-- replaced --'); pprint(tuple(tree))
 
     ret = _delete(tree, key, max_n)
     if is_empty(ret.keys):
@@ -559,8 +559,8 @@ return new_tree
 #keys = [1,0,2]; rm_keys = [1,2,0]; max_n = 2; tree = btree(max_n, *keys)
 #keys,rm_keys = [0, 1, 2, -1, -2, 3, 4], [-2, 2, 1, 0, 3, -1, 4]
 #keys, rm_keys = [0, 1, -1, 2, -2, 3, -3], [-2, -1, 1, 0, 3, 2, -3]
-keys, rm_keys = [0, 1, -1, 2, -2, -3, -4, -5], [-2, 1, -3, -1, 0, 2, -5, -4]
-#keys, rm_keys = [0, 1, -1, 2, -2, 3, -3, 4, 5], [4, 3, 1, 2, -2, -1, 0, 5, -3]
+#keys, rm_keys = [0, 1, -1, 2, -2, -3, -4, -5], [-2, 1, -3, -1, 0, 2, -5, -4]
+keys, rm_keys = [0, 1, -1, 2, -2, 3, -3, 4, 5], [4, 3, 1, 2, -2, -1, 0, 5, -3]
 max_n = 2; tree = btree(max_n, *keys)
 
 print('-------- before --------')
