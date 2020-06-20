@@ -169,7 +169,7 @@ def test_tuple_update(tup_idx_new):
 def test_tup_omit(tup_idx_new):
     tup, idx, _ = tup_idx_new
     new_tup = tup_omit(tup, idx)
-    assert tuple_insert(new_tup, idx, tup[idx]) == tup
+    assert tup_insert(new_tup, idx, tup[idx]) == tup
     
 #---------------------------------------------------------
 @given(st.integers(min_value=2, max_value=3),
