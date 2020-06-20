@@ -62,11 +62,6 @@ for N in tqdm(Ns):
     times['delete'][234].append(t234del_time)
 
 from pprint import pprint
-'''
-pprint(times['insert'])
-pprint(times['find'])
-pprint(times['delete'])
-'''
 pprint(times)
 
 for what in ['insert','find','delete']:
@@ -76,4 +71,3 @@ for what in ['insert','find','delete']:
     plt.ylabel('time (sec)')
     plt.legend()
     plt.show()
-
