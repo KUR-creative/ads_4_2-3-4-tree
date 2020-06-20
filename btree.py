@@ -99,11 +99,6 @@ def split_node(node, max_n):
                  keys = node.keys[up_idx + 1:],
                  children = node.children[up_idx+1:])))
 
-def intersect_seq(children, keys):
-    return F.butlast(F.cat(zip(
-        children, keys + type(keys)([None]))))
-        
-        
 #--------------------------------------------------------------
 # Minimum number of keys = 0 in 2-3 and 2-3-4 tree.
 # This is implicitly implemented.
@@ -229,11 +224,6 @@ def _delete(node, key):
         #print('---- upward ----'); pprint(tuple(ret))
         #return ret
 
-def empty_node_idx(children):
-    for idx, child in enumerate(children):
-        if is_empty(child.keys):
-            return idx
-    
 def get_path(tree, key): # Get path root to leaf
     '''
     returns:
@@ -270,6 +260,11 @@ def update(tree, idxes, new_node):
                 tree.children,
                 idx,
                 update(tree.children[idx], last, new_node)))
+    
+def empty_node_idx(children):
+    for idx, child in enumerate(children):
+        if is_empty(child.keys):
+            return idx
     
 def sibling_idxes(children, idx):
     ''' return: index(es) of sibling, if no sibling, []. '''
@@ -372,6 +367,10 @@ def merge(tree, idxes, leaf, leaf_idx, parent, sib_idxes):
 '''
 
 #--------------------------------------------------------------
+def intersect_seq(children, keys):
+    return F.butlast(F.cat(zip(
+        children, keys + type(keys)([None]))))
+        
 def all_keys(root):
     if root.is_leaf:
         return root.keys
