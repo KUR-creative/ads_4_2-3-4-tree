@@ -234,6 +234,8 @@ def get_path(tree, key): # Get path root to leaf
     founds= [key in node.keys]
     while not node.is_leaf:
         node_idx = bisect(node.keys, key)
+        print('n keys', node.keys, 'key', key, 'idx', node_idx)
+
         next_node = node.children[node_idx]
         nodes.append(next_node)
         idxes.append(node_idx)
@@ -296,7 +298,7 @@ def empty_node_idx(children):
 
 
 def _delete(node, key, max_n):
-    #print('---- go deep ----'); pprint(tuple(node))
+    print('---- go deep ----'); pprint(tuple(node))
     if node.is_leaf:
         idx = index(node.keys, key) # idx in node.keys
         return node._replace(
@@ -304,7 +306,7 @@ def _delete(node, key, max_n):
                 tup_omit(node.keys, idx)))
     else:
         idx = bisect(node.keys, key)
-        #print('idx', idx)
+        print('  keys', node.keys, 'key', key, 'idx', idx)
         children = tup_update(
             node.children,
             idx,
@@ -380,7 +382,7 @@ def _delete(node, key, max_n):
             children = children
         )
 
-        #print('---- upward ----'); pprint(tuple(ret))
+        print('---- upward ----'); pprint(tuple(ret))
         return ret
 
     
@@ -390,7 +392,7 @@ def delete(tree, key, max_n):
     # Get path root to leaf
     nodes, path, founds = get_path(tree, key)
     #print('---- nodes ----'); pprint(nodes)
-    #print('---- path ----'); pprint(path)
+    print('---- path ----'); pprint(path)
     # print('---- founds ----'); pprint(founds)
     #print('-- origin --'); pprint(tuple(tree))
     if not any(founds):
@@ -417,6 +419,8 @@ def delete(tree, key, max_n):
         found_path = path[:found_depth]
         tree = update(tree, found_path, new_found)
         tree = update(tree, path, new_r_node)
+        # update key
+        key = mv_key
         #print('-- replaced --'); pprint(tuple(tree))
 
     ret = _delete(tree, key, max_n)
@@ -556,6 +560,7 @@ return new_tree
 #keys,rm_keys = [0, 1, 2, -1, -2, 3, 4], [-2, 2, 1, 0, 3, -1, 4]
 #keys, rm_keys = [0, 1, -1, 2, -2, 3, -3], [-2, -1, 1, 0, 3, 2, -3]
 keys, rm_keys = [0, 1, -1, 2, -2, -3, -4, -5], [-2, 1, -3, -1, 0, 2, -5, -4]
+#keys, rm_keys = [0, 1, -1, 2, -2, 3, -3, 4, 5], [4, 3, 1, 2, -2, -1, 0, 5, -3]
 max_n = 2; tree = btree(max_n, *keys)
 
 print('-------- before --------')
