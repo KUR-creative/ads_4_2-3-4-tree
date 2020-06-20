@@ -70,8 +70,8 @@ pprint(times['delete'])
 pprint(times)
 
 for what in ['insert','find','delete']:
-    plt.plot(Ns, times['insert'][23],  label=f'2-3 tree {what}')
-    plt.plot(Ns, times['insert'][234], label=f'2-3-4 tree {what}')
+    plt.plot(Ns, times[what][23],  label=f'2-3 tree {what}')
+    plt.plot(Ns, times[what][234], label=f'2-3-4 tree {what}')
     plt.xlabel('number of items')
     plt.ylabel('time (sec)')
     plt.legend()
