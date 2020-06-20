@@ -127,49 +127,49 @@ def split_node(node, max_n):
                  keys = node.keys[up_idx + 1:],
                  children = node.children[up_idx+1:])))
 
-def find(node, key):
-    if key in node.keys:
-        return node
+def find(tree, key):
+    if key in tree.keys:
+        return tree
     else:
-        idx = bisect(node.keys, key)
-        if is_empty(node.children):
+        idx = bisect(tree.keys, key)
+        if is_empty(tree.children):
             return None
         else:
-            return find(node.children[idx], key) 
+            return find(tree.children[idx], key) 
 
 # max_n = 2: 2-3
 # max_n = 3: 2-3-4
-def insert(node, key, max_n):
-    if node is None:
+def insert(tree, key, max_n):
+    if tree is None:
         return leaf(key)
-    idx = bisect(node.keys, key)
-    if node.is_leaf:
-        new_keys = tup_insert(node.keys, idx, key)
-        new_node = node._replace(keys = new_keys)
+    idx = bisect(tree.keys, key)
+    if tree.is_leaf:
+        new_keys = tup_insert(tree.keys, idx, key)
+        new_node = tree._replace(keys = new_keys)
         return(new_node if len(new_keys) <= max_n # just insert to leaf
           else split_node(new_node, max_n)) # split
     else:
-        old_child = node.children[idx]
-        child = insert(node.children[idx], key, max_n)
+        old_child = tree.children[idx]
+        child = insert(tree.children[idx], key, max_n)
         has_split_child = (
             len(old_child.keys) > len(child.keys))
 
         if not has_split_child: # key is just inserted
-            return node._replace(
+            return tree._replace(
                 children = tup_update(
-                    node.children, idx, child))
+                    tree.children, idx, child))
         else: # child has been split.
             excerpt = child
             up_key = excerpt.keys[0]
-            merged = node._replace(
+            merged = tree._replace(
                 keys = tup_insert(
-                    node.keys, idx, up_key),
+                    tree.keys, idx, up_key),
                 children = tup_update(
-                    node.children, idx, *excerpt.children))
+                    tree.children, idx, *excerpt.children))
             return(merged if len(merged.keys) <= max_n # just insert to leaf
               else split_node(merged, max_n)) # split
         
-def update(node, idxes, new_node):
+def update(tree, idxes, new_node):
     ''' 
     Go to deep along to idxes..
     if idxes are empty, then change the node with new node
@@ -178,11 +178,11 @@ def update(node, idxes, new_node):
         return new_node
     else:
         idx, *last = idxes
-        return node._replace(
+        return tree._replace(
             children = tup_update(
-                node.children,
+                tree.children,
                 idx,
-                update(node.children[idx], last, new_node)))
+                update(tree.children[idx], last, new_node)))
     
 def sibling_idxes(children, idx):
     ''' return: index(es) of sibling, if no sibling, []. '''
@@ -310,7 +310,7 @@ def empty_node_idx(children):
         if is_empty(child.keys):
             return idx
 
-def _delete(node, key, max_n):
+def _delete(node, key):
     #print('---- go deep ----'); pprint(tuple(node))
     if node.is_leaf:
         idx = index(node.keys, key) # idx in node.keys
@@ -322,7 +322,7 @@ def _delete(node, key, max_n):
         children = tup_update(
             node.children,
             idx,
-            _delete(node.children[idx], key, max_n))
+            _delete(node.children[idx], key))
         
         empty_idx = empty_node_idx(children)
         if empty_idx is None: # no steal, no merge
@@ -398,7 +398,9 @@ def _delete(node, key, max_n):
     
 # Minimum number of keys = 0 in 2-3 and 2-3-4 tree.
 # This is implicitly implemented.
-def delete(tree, key, max_n):
+def delete(tree, key):
+    if tree is None:
+        return None
     # Get path root to leaf
     nodes, path, founds = get_path(tree, key)
     if not any(founds):
@@ -423,7 +425,7 @@ def delete(tree, key, max_n):
         key = mv_key
         #print('-- replaced --'); pprint(tuple(tree))
 
-    ret = _delete(tree, key, max_n)
+    ret = _delete(tree, key)
     if is_empty(ret.keys):
         if ret.children:
             assert len(ret.children) == 1

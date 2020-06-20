@@ -99,16 +99,16 @@ def test_delete_explicit_sequence():
     max_n = 2
     # no found
     tree = btree(2, 2,5,7,8)
-    assert tree == delete(tree, -100, 2)
+    assert tree == delete(tree, -100)
     
     # h=2, leaf(replace x), steal x, merge x
-    assert(delete(tree, 7, 2) 
+    assert(delete(tree, 7) 
         == Node(False, (5,), (
             Node(is_leaf=True, keys=(2,), children=()),
             Node(is_leaf=True, keys=(8,), children=()))))
     # h = 3, leaf(replace x), steal x, merge x
     tree = btree(2, *range(5,40+5,5))
-    assert(delete(tree, 35, 2) 
+    assert(delete(tree, 35) 
         == Node(is_leaf=False, keys=(20,), children=(
             Node(is_leaf=False, keys=(10,), children=(
                 Node(is_leaf=True, keys=(5,), children=()),
@@ -119,18 +119,18 @@ def test_delete_explicit_sequence():
     
     # leaf(replace x), steal (L <- R), merge x
     tree = btree(2, 2,5,7,8)
-    assert(delete(tree, 2, 2) 
+    assert(delete(tree, 2) 
         == Node(False, (7,), (
             Node(is_leaf=True, keys=(5,), children=()),
             Node(is_leaf=True, keys=(8,), children=()))))
     # leaf(replace x), steal (L -> R), merge x
-    assert(delete(btree(2, 5,7,8,6), 8, 2)
+    assert(delete(btree(2, 5,7,8,6), 8)
         == Node(False, (6,), (
             Node(is_leaf=True, keys=(5,), children=()),
             Node(is_leaf=True, keys=(7,), children=()))))
     # leaf, steal (L -> R, parent many keys), merge x
     max_n = 3; tree = btree(max_n, 3,5,7,9,11,13,15,17)
-    assert(delete(tree, 11, max_n)
+    assert(delete(tree, 11)
         == Node(False, (5, 9, 15), (
             Node(is_leaf=True, keys=(3,), children=()),
             Node(is_leaf=True, keys=(7,), children=()),
@@ -139,12 +139,12 @@ def test_delete_explicit_sequence():
     
     # leaf(replace x), steal x, merge(idx > 0)
     max_n = 2; tree = btree(max_n, 4,5,7,8,10)
-    assert(delete(tree, 7, max_n)
+    assert(delete(tree, 7)
         == Node(False, (8,), (
             Node(is_leaf=True, keys=(4, 5), children=()),
             Node(is_leaf=True, keys=(10,), children=()))))
     # leaf(replace x), steal x, merge(idx = 0)
-    assert(delete(tree, 4, max_n)
+    assert(delete(tree, 4)
         == Node(False, (8,), (
             Node(is_leaf=True, keys=(5, 7), children=()),
             Node(is_leaf=True, keys=(10,), children=()))))
@@ -245,7 +245,7 @@ def test_delete_prop_test(keys_shuffled):
         for beg,key in enumerate(shuffled):
             #pprint(tuple(tree) if tree is not None else tree)
             #print('---- rm key:', key, '----', shuffled, shuffled[beg + 1:])
-            tree = delete(tree, key, max_n)
+            tree = delete(tree, key)
             #pprint(tuple(tree) if tree is not None else tree)
             assert_valid(tree, max_n, tuple(shuffled[beg + 1:]))
             
@@ -265,6 +265,6 @@ def test_delete_prop_test_duplicated_keys(keys_shuffled):
         for beg,key in enumerate(shuffled):
             #pprint(tuple(tree) if tree is not None else tree)
             #print('---- rm key:', key, '----', shuffled, shuffled[beg + 1:])
-            tree = delete(tree, key, max_n)
+            tree = delete(tree, key)
             #pprint(tuple(tree) if tree is not None else tree)
             assert_valid(tree, max_n, tuple(shuffled[beg + 1:]))
