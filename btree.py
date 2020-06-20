@@ -426,10 +426,6 @@ def assert_valid(tree, max_n, input_keys):
     for n in ns:
         assert not is_invalid(n, max_n), \
         f'some nodes are invalid:\n {is_invalid(n, max_n)}'
-    assert all(len(n.children) == 0 for n in ns if n.is_leaf), \
-        'some leaves have children'
-    assert all(len(n.children) != 0 for n in ns if not n.is_leaf), \
-        'some internal leaves have no children'
     assert all(map(
         lambda node: all([
             n1.is_leaf == n2.is_leaf
