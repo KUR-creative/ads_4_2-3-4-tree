@@ -28,15 +28,8 @@ def test_insert_split():
     root = ins2(root, 7)
     assert root == Node(False, (6,), (leaf(5), leaf(7)))
     
-    max_n = 3
-    ins3 = lambda *args: insert(*args, 3)
-    #root = insert(leaf(5), 6, 2)
-    #root = insert(root, 7, 2)
-    
 def test_insert_explicit_sequence():
     max_n = 2
-    #keys = (100, 50, 150, 200, 120, 135, 140, 170)
-    #keys = (100, 50, 150, 200, 120, 135, 140, 170, 250)
     keys = (100, 50, 150, 200, 120, 135, 140, 170, 250, 145)
     expecteds = [
         Node(True, (100,), ()),
@@ -94,7 +87,6 @@ def test_sibling_idxes(xs_idx):
         xs[sidx] # assert no crash
         assert ans_idx == sidx - 1 or ans_idx == sidx + 1
 
-#@pytest.mark.skip(reason="not now")
 def test_delete_explicit_sequence():
     max_n = 2
     # no found
@@ -149,7 +141,6 @@ def test_delete_explicit_sequence():
             Node(is_leaf=True, keys=(5, 7), children=()),
             Node(is_leaf=True, keys=(10,), children=()))))
         
-    
 #---------------------------------------------------------
 @st.composite
 def gen_tup(draw):
@@ -229,7 +220,6 @@ def gen_keys_shuffled(draw, unique=True):
     random.shuffle(shuffled)
     return keys, shuffled
 
-#@pytest.mark.skip(reason="not now")
 @given(gen_keys_shuffled(unique=True))
 def test_delete_prop_test(keys_shuffled):
     keys, shuffled = keys_shuffled
