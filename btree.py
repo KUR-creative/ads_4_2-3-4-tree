@@ -694,6 +694,7 @@ for end,key in enumerate(keys[1:], start=2):
 #keys, rm_keys = [0, 1, -1, 2, -2, 3, -3, 4, 5], [4, 3, 1, 2, -2, -1, 0, 5, -3]
 #keys, rm_keys = [0, 1, -1, -2, 3, -3, -4, 2, -5], [2, -3, 1, -2, 3, -1, 0, -5, -4]
 keys, rm_keys = [1, -1, 2, -2, 5, 6, 0, 4, 7, 8, 3], [7, 8, -1, 2, 6, -2, 4, 5, 1, 3, 0]
+#keys,rm_keys = [0, 1, 0, 1], [0, 0, 1, 1] # duplicate case..
 max_n = 2; tree = btree(max_n, *keys)
 
 print('-------- before --------')

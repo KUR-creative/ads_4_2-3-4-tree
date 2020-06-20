@@ -191,15 +191,15 @@ def test_insert_prop_test(keys):
             assert_valid(tree, max_n, keys[:end])
             
 @st.composite
-def gen_keys_shuffled(draw):
+def gen_keys_shuffled(draw, unique=True):
     keys = draw(st.lists(
-        st.integers(), min_size = 2, unique=True))
+        st.integers(), min_size = 2, unique=unique))
     shuffled = keys[:]
     random.shuffle(shuffled)
     return keys, shuffled
 
 #@pytest.mark.skip(reason="not now")
-@given(gen_keys_shuffled())
+@given(gen_keys_shuffled(unique=True))
 def test_delete_prop_test(keys_shuffled):
     keys, shuffled = keys_shuffled
     for max_n in [2,3]:
@@ -217,5 +217,23 @@ def test_delete_prop_test(keys_shuffled):
             tree = delete(tree, key, max_n)
             #pprint(tuple(tree) if tree is not None else tree)
             assert_valid(tree, max_n, tuple(shuffled[beg + 1:]))
-        '''
-        '''
+            
+@pytest.mark.skip(reason="not this time!")
+@given(gen_keys_shuffled(unique=False))
+def test_delete_prop_test_duplicated_keys(keys_shuffled):
+    keys, shuffled = keys_shuffled
+    for max_n in [2,3]:
+        keys = tuple(keys)
+        tree = Node(True, keys[:1])
+        print('-------------------======')
+        for end,key in enumerate(keys[1:], start=2):
+            tree = insert(tree, key, max_n)
+            #print(max_n); print(key); print(tree); print(len(keys) > max_n)
+            assert_valid(tree, max_n, keys[:end])
+            
+        for beg,key in enumerate(shuffled):
+            #pprint(tuple(tree) if tree is not None else tree)
+            #print('---- rm key:', key, '----', shuffled, shuffled[beg + 1:])
+            tree = delete(tree, key, max_n)
+            #pprint(tuple(tree) if tree is not None else tree)
+            assert_valid(tree, max_n, tuple(shuffled[beg + 1:]))
